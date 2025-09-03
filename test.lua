@@ -1,7 +1,6 @@
 -- Upioguard HUB Script
 -- Script principal único com suporte automático a jogos
 -- Funciona offline sem dependências externas
--- Gerado automaticamente pelo build_hub.py
 
 local start_time = os.time()
 
@@ -19,7 +18,7 @@ local executor_name = _identify_executor()
 
 print("Progresso: 1/4 - Informações do jogo coletadas")
 
--- Key verification (you need to set this variable in your executor)
+-- Key is already provided by the executor
 local key_value = rawget(getfenv(), "key") or (rawget(_G, "ug_key") or rawget(getfenv(), "ug_key"))
 
 if not key_value or key_value == "" then
@@ -29,147 +28,169 @@ end
 
 print("Progresso: 2/4 - Chave detectada")
 
--- Simple key validation (basic format check)
-local function validateKeyFormat(key)
-    if not key then return false end
-    if type(key) ~= "string" then return false end
-    if #key < 10 then return false end
-    if key:match("^ugt_") then return true end -- Upioguard key format
-    return true -- Accept other formats for now
+-- Function to check key validity and get remaining time
+local function checkKeyValidity(key)
+    local success, response = pcall(function()
+        local http = http or http_request or request
+        if not http then
+            return nil, "HTTP function not available"
+        end
+        
+        local headers = {
+            ["upioguard-key"] = key,
+            ["upioguard-rbxlusername"] = player.Name,
+            ["upioguard-rbxlplaceid"] = tostring(current_place_id),
+            ["upioguard-rbxljobid"] = tostring(current_job_id),
+            ["upioguard-rbxluserid"] = tostring(player.UserId),
+            ["upioguard-rbxlgamename"] = "Game Name",
+            ["upioguard-executor"] = executor_name,
+            ["upioguard-ismobile"] = "false",
+            ["upioguard-fingerprint"] = tostring(player.UserId)
+        }
+        
+        local response = http({
+            Url = "https://guard-orcin.vercel.app/api/script/B4RXsJRNywj6kOBmh4/execute",
+            Method = "GET",
+            Headers = headers
+        })
+        
+        if response.Status == 200 and response.Body then
+            return response.Body
+        else
+            return nil, "Invalid response from server"
+        end
+    end)
+    
+    if success and response then
+        return true, response
+    else
+        return false, response or "Unknown error"
+    end
 end
 
--- Validate key format
-if not validateKeyFormat(key_value) then
-    print("❌ ERRO: Formato de chave inválido!")
-    error("Invalid key format! Key should be a valid Upioguard key")
+-- Check key validity
+local is_valid, script_content = checkKeyValidity(key_value)
+
+if not is_valid then
+    print("❌ ERRO: Falha ao verificar a chave: " .. tostring(script_content))
+    error("Key validation failed: " .. tostring(script_content))
 end
 
-print("Progresso: 3/4 - Formato da chave validado")
+print("Progresso: 3/4 - Chave validada com sucesso")
+
+-- Function to get remaining time from key
+local function getKeyRemainingTime(key)
+    local success, response = pcall(function()
+        local http = http or http_request or request
+        if not http then
+            return nil, "HTTP function not available"
+        end
+        
+        local headers = {
+            ["upioguard-key"] = key,
+            ["upioguard-rbxlusername"] = player.Name,
+            ["upioguard-rbxlplaceid"] = tostring(current_place_id),
+            ["upioguard-rbxljobid"] = tostring(current_job_id),
+            ["upioguard-rbxluserid"] = tostring(player.UserId),
+            ["upioguard-rbxlgamename"] = "Game Name",
+            ["upioguard-executor"] = executor_name,
+            ["upioguard-ismobile"] = "false",
+            ["upioguard-fingerprint"] = tostring(player.UserId)
+        }
+        
+        -- Try to get key info from the API
+        local response = http({
+            Url = "https://guard-orcin.vercel.app/api/script/B4RXsJRNywj6kOBmh4/execute",
+            Method = "GET",
+            Headers = headers
+        })
+        
+        if response.Status == 200 then
+            -- Parse response to get expiration info
+            -- This is a simplified approach - in reality you'd need to parse the response properly
+            return "Valid key - time remaining: Checking..."
+        else
+            return "Key status unknown"
+        end
+    end)
+    
+    if success then
+        return response
+    else
+        return "Unable to check key status"
+    end
+end
+
+-- Get key remaining time
+local key_status = getKeyRemainingTime(key_value)
 
 -- Game scripts configuration (integrated)
 local game_scripts = {
     [592150372] = {
         name = "Baseplate",
-        description = "Script para Baseplate",
+        description = "Jogo básico do Roblox",
         script = function()
             print("[Baseplate Script]: Carregando script para Baseplate...")
             
-            -- Script integrado do Baseplate
-if game.PlaceId ~= PlaceID then
-print("[Baseplate Script]: Este script é apenas para o jogo Baseplate!")
-return
-end
-print("[Baseplate Script]: Carregando script para Baseplate...")
-local function createBaseplate()
-local baseplate = Instance.new("Part")
-baseplate.Name = "Baseplate"
-baseplate.Size = Vector3.new(512, 1, 512)
-baseplate.Position = Vector3.new(0, -0.5, 0)
-baseplate.Anchored = true
-baseplate.Material = Enum.Material.Grass
-baseplate.Parent = workspace
-print("[Baseplate Script]: Baseplate criada!")
-return baseplate
-end
-local function createSpawnLocation()
-local spawnLocation = Instance.new("SpawnLocation")
-spawnLocation.Name = "SpawnLocation"
-spawnLocation.Size = Vector3.new(6, 1, 6)
-spawnLocation.Position = Vector3.new(0, 1, 0)
-spawnLocation.Anchored = true
-spawnLocation.Material = Enum.Material.Neon
-spawnLocation.BrickColor = BrickColor.new("Bright blue")
-spawnLocation.Parent = workspace
-print("[Baseplate Script]: Spawn location criada!")
-return spawnLocation
-end
-local function teleportToSpawn()
-local player = game:GetService("Players").LocalPlayer
-if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-player.Character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
-print("[Baseplate Script]: Teleportado para o spawn!")
-end
-end
-local baseplate = createBaseplate()
-local spawnLocation = createSpawnLocation()
-wait(1)
-teleportToSpawn()
-print("[Baseplate Script]: Script carregado com sucesso!")
-print("[Baseplate Script]: PlaceID verificado: " .. game.PlaceId)
-            
+            -- Funções úteis para Baseplate
+            local function createBaseplate()
+                local baseplate = Instance.new("Part")
+                baseplate.Name = "Baseplate"
+                baseplate.Size = Vector3.new(512, 1, 512)
+                baseplate.Position = Vector3.new(0, -0.5, 0)
+                baseplate.Anchored = true
+                baseplate.Material = Enum.Material.Grass
+                baseplate.Parent = workspace
+                
+                print("[Baseplate Script]: Baseplate criada!")
+                return baseplate
+            end
+
+            local function createSpawnLocation()
+                local spawnLocation = Instance.new("SpawnLocation")
+                spawnLocation.Name = "SpawnLocation"
+                spawnLocation.Size = Vector3.new(6, 1, 6)
+                spawnLocation.Position = Vector3.new(0, 1, 0)
+                spawnLocation.Anchored = true
+                spawnLocation.Material = Enum.Material.Neon
+                spawnLocation.BrickColor = BrickColor.new("Bright blue")
+                spawnLocation.Parent = workspace
+                
+                print("[Baseplate Script]: Spawn location criada!")
+                return spawnLocation
+            end
+
+            local function teleportToSpawn()
+                local player = game:GetService("Players").LocalPlayer
+                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    player.Character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
+                    print("[Baseplate Script]: Teleportado para o spawn!")
+                end
+            end
+
+            -- Executar funções
+            local baseplate = createBaseplate()
+            local spawnLocation = createSpawnLocation()
+
+            -- Aguardar um pouco e teleportar
+            wait(1)
+            teleportToSpawn()
+
             print("[Baseplate Script]: Script carregado com sucesso!")
             print("[Baseplate Script]: PlaceID verificado: " .. game.PlaceId)
         end
-    },
-    [123456789] = {
-        name = "ExampleGame",
-        description = "Script para ExampleGame",
-        script = function()
-            print("[ExampleGame Script]: Carregando script para ExampleGame...")
-            
-            -- Script integrado do ExampleGame
-if game.PlaceId ~= PlaceID then
-print("[ExampleGame Script]: Este script é apenas para o jogo ExampleGame!")
-return
-end
-local function setupGame()
-print("[ExampleGame Script]: Configurando o jogo...")
-local success, result = pcall(function()
-return "Game configured successfully"
-end)
-if success then
-print("[ExampleGame Script]: " .. result)
-else
-print("[ExampleGame Script]: Erro ao configurar o jogo: " .. tostring(result))
-end
-end
-local function createUI()
-print("[ExampleGame Script]: Criando interface do usuário...")
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "ExampleGameUI"
-screenGui.Parent = game:GetService("CoreGui")
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 100)
-frame.Position = UDim2.new(0.5, -100, 0.5, -50)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-frame.BorderSizePixel = 0
-frame.Parent = screenGui
-local textLabel = Instance.new("TextLabel")
-textLabel.Size = UDim2.new(1, 0, 1, 0)
-textLabel.Text = "ExampleGame Script\nAtivo!"
-textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-textLabel.BackgroundTransparency = 1
-textLabel.Parent = frame
-print("[ExampleGame Script]: Interface criada!")
-end
-local function startGameLoop()
-print("[ExampleGame Script]: Iniciando loop do jogo...")
-spawn(function()
-while wait(5) do -- Executa a cada 5 segundos
-print("[ExampleGame Script]: Game loop tick - " .. os.date("%H:%M:%S"))
-end
-end)
-end
-setupGame()
-createUI()
-startGameLoop()
-print("[ExampleGame Script]: Script carregado com sucesso!")
-print("[ExampleGame Script]: PlaceID verificado: " .. game.PlaceId)
-            
-            print("[ExampleGame Script]: Script carregado com sucesso!")
-            print("[ExampleGame Script]: PlaceID verificado: " .. game.PlaceId)
-        end
     }
+    -- Adicione novos jogos aqui seguindo o mesmo padrão
 }
 
 -- Print key info
 print("=== Informações do HUB ===")
 print("Executor: " .. executor_name)
 print("Chave: " .. key_value)
+print("Status da Chave: " .. key_status)
 print("PlaceID Atual: " .. current_place_id)
 print("JobID Atual: " .. current_job_id)
 print("Jogador: " .. player.Name .. " (ID: " .. player.UserId .. ")")
-print("Expiração da Chave: Permanente ou não disponível")
 print("==========================")
 
 -- Check if we have a script for this game
@@ -200,7 +221,7 @@ else
         print("  - " .. info.name .. " (PlaceID: " .. place_id .. "): " .. info.description)
     end
     
-    print("💡 Para adicionar suporte a este jogo, crie um arquivo na pasta Games/ e execute build_hub.py")
+    print("💡 Para adicionar suporte a este jogo, edite o arquivo main.lua na seção game_scripts")
 end
 
 print("Progresso: 4/4 - HUB carregado com sucesso!")
