@@ -1030,7 +1030,7 @@ local function loadGameScript()
             end)
         end
     },
-    [130739873848552] = {
+    [1111111111111] = {
         name = "ExampleGame",
         description = "Script for ExampleGame",
         script = function()
