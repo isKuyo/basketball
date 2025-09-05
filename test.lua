@@ -1027,16 +1027,38 @@ local function setupFallbackSystem()
                 -- Aplicar lógica do script original com alvo correto
                 -- Sem delay para evitar comportamento de parada
                 if ball.Parent then
-                    local perfectVelocity = calculateOriginalTrajectory(ballPos, targetDirection, distance, distance <= 30)
-                    ball.AssemblyLinearVelocity = perfectVelocity
-                    
-                    ballTrajectoryData = {
-                        startTime = currentTime,
-                        startPos = ballPos,
-                        targetPos = hoopPos,
-                        originalVelocity = perfectVelocity,
-                        isActive = false -- Desabilitar sistema de correção ativa
-                    }
+                    -- Verificar último possuidor da bola; só aplicar correção se for inimigo
+                    local lastPlayer = nil
+                    pcall(function()
+                        if BallController and BallController.GetLastPlayerToPossessBall then
+                            lastPlayer = BallController:GetLastPlayerToPossessBall()
+                        elseif BallController and BallController.GetLastCharacterToPossessBall then
+                            local char = BallController:GetLastCharacterToPossessBall()
+                            if char and char.Parent then
+                                lastPlayer = Players:GetPlayerFromCharacter(char)
+                            end
+                        end
+                    end)
+
+                    local function lastPlayerIsEnemy()
+                        if not lastPlayer then return false end
+                        if lastPlayer == LocalPlayer then return false end
+                        if not lastPlayer.Team then return true end
+                        return lastPlayer.Team ~= LocalPlayer.Team
+                    end
+
+                    if lastPlayerIsEnemy() then
+                        local perfectVelocity = calculateOriginalTrajectory(ballPos, targetDirection, distance, distance <= 30)
+                        ball.AssemblyLinearVelocity = perfectVelocity
+
+                        ballTrajectoryData = {
+                            startTime = currentTime,
+                            startPos = ballPos,
+                            targetPos = hoopPos,
+                            originalVelocity = perfectVelocity,
+                            isActive = false -- Desabilitar sistema de correção ativa
+                        }
+                    end
                 end
             end
             
@@ -1225,26 +1247,56 @@ do
             if lastBallVelocity ~= Vector3.new() then
                 local velocityChange = (ballVelocity - lastBallVelocity).Magnitude
 
+                -- obter o último jogador que possuía a bola (se disponível)
+                local lastPlayer = nil
+                pcall(function()
+                    if BallController and BallController.GetLastPlayerToPossessBall then
+                        lastPlayer = BallController:GetLastPlayerToPossessBall()
+                    elseif BallController and BallController.GetLastCharacterToPossessBall then
+                        local char = BallController:GetLastCharacterToPossessBall()
+                        if char and char.Parent then
+                            lastPlayer = Players:GetPlayerFromCharacter(char)
+                        end
+                    end
+                end)
+
+                local function lastPlayerIsEnemy()
+                    if not lastPlayer then return false end
+                    if lastPlayer == Player then return false end
+                    if not lastPlayer.Team then return true end
+                    return lastPlayer.Team ~= Player.Team
+                end
+
+                -- Detectar tiro (mudança brusca de velocidade para cima)
                 if velocityChange > SHOOT_VELOCITY_CHANGE_THRESHOLD and ballVelocity.Magnitude > MIN_SHOOT_VELOCITY and ballPosition.Y > SHOOT_MIN_HEIGHT then
-                    local toBall = (ballPosition - HumanoidRootPart.Position)
-                    if toBall.Magnitude > 0 then
-                        local ballDirection = ballVelocity.Unit
-                        local dotProduct = ballDirection:Dot(-toBall.Unit)
-                        if dotProduct > 0.4 then
-                            local distance = toBall.Magnitude
-                            if distance <= AUTO_BLOCK_RANGE then
-                                if shootEnabled then Jump() end
+                    -- só reagir se soubermos quem lançou/passou e for inimigo
+                    if not lastPlayerIsEnemy() then
+                        -- ignorar tiros feitos por nós ou por aliados / ou se desconhecido
+                    else
+                        local toBall = (ballPosition - HumanoidRootPart.Position)
+                        if toBall.Magnitude > 0 then
+                            local ballDirection = ballVelocity.Unit
+                            local dotProduct = ballDirection:Dot(-toBall.Unit)
+                            if dotProduct > 0.4 then
+                                local distance = toBall.Magnitude
+                                if distance <= AUTO_BLOCK_RANGE then
+                                    if shootEnabled then Jump() end
+                                end
                             end
                         end
                     end
+                -- Detectar passes (velocidade menor, próximo do chão)
                 elseif ballVelocity.Magnitude > MIN_PASS_VELOCITY and ballPosition.Y < PASS_MAX_HEIGHT then
-                    local toBall = (ballPosition - HumanoidRootPart.Position)
-                    if ballVelocity.Magnitude > 0 then
-                        local timeToReach = toBall.Magnitude / ballVelocity.Magnitude
-                        local predictedPosition = ballPosition + ballVelocity * timeToReach
-                        local distanceToTrajectory = (HumanoidRootPart.Position - predictedPosition).Magnitude
-                        if distanceToTrajectory <= TRAJECTORY_PREDICTION_DISTANCE then
-                            if passEnabled then Jump() end
+                    -- validar possuidor do passe; ignorar se for nós
+                    if lastPlayer and lastPlayer ~= Player and lastPlayerIsEnemy() then
+                        local toBall = (ballPosition - HumanoidRootPart.Position)
+                        if ballVelocity.Magnitude > 0 then
+                            local timeToReach = toBall.Magnitude / ballVelocity.Magnitude
+                            local predictedPosition = ballPosition + ballVelocity * timeToReach
+                            local distanceToTrajectory = (HumanoidRootPart.Position - predictedPosition).Magnitude
+                            if distanceToTrajectory <= TRAJECTORY_PREDICTION_DISTANCE then
+                                if passEnabled then Jump() end
+                            end
                         end
                     end
                 end
@@ -2311,16 +2363,38 @@ local function setupFallbackSystem()
                 -- Aplicar lógica do script original com alvo correto
                 -- Sem delay para evitar comportamento de parada
                 if ball.Parent then
-                    local perfectVelocity = calculateOriginalTrajectory(ballPos, targetDirection, distance, distance <= 30)
-                    ball.AssemblyLinearVelocity = perfectVelocity
-                    
-                    ballTrajectoryData = {
-                        startTime = currentTime,
-                        startPos = ballPos,
-                        targetPos = hoopPos,
-                        originalVelocity = perfectVelocity,
-                        isActive = false -- Desabilitar sistema de correção ativa
-                    }
+                    -- Verificar último possuidor da bola; só aplicar correção se for inimigo
+                    local lastPlayer = nil
+                    pcall(function()
+                        if BallController and BallController.GetLastPlayerToPossessBall then
+                            lastPlayer = BallController:GetLastPlayerToPossessBall()
+                        elseif BallController and BallController.GetLastCharacterToPossessBall then
+                            local char = BallController:GetLastCharacterToPossessBall()
+                            if char and char.Parent then
+                                lastPlayer = Players:GetPlayerFromCharacter(char)
+                            end
+                        end
+                    end)
+
+                    local function lastPlayerIsEnemy()
+                        if not lastPlayer then return false end
+                        if lastPlayer == LocalPlayer then return false end
+                        if not lastPlayer.Team then return true end
+                        return lastPlayer.Team ~= LocalPlayer.Team
+                    end
+
+                    if lastPlayerIsEnemy() then
+                        local perfectVelocity = calculateOriginalTrajectory(ballPos, targetDirection, distance, distance <= 30)
+                        ball.AssemblyLinearVelocity = perfectVelocity
+
+                        ballTrajectoryData = {
+                            startTime = currentTime,
+                            startPos = ballPos,
+                            targetPos = hoopPos,
+                            originalVelocity = perfectVelocity,
+                            isActive = false -- Desabilitar sistema de correção ativa
+                        }
+                    end
                 end
             end
             
@@ -2509,26 +2583,56 @@ do
             if lastBallVelocity ~= Vector3.new() then
                 local velocityChange = (ballVelocity - lastBallVelocity).Magnitude
 
+                -- obter o último jogador que possuía a bola (se disponível)
+                local lastPlayer = nil
+                pcall(function()
+                    if BallController and BallController.GetLastPlayerToPossessBall then
+                        lastPlayer = BallController:GetLastPlayerToPossessBall()
+                    elseif BallController and BallController.GetLastCharacterToPossessBall then
+                        local char = BallController:GetLastCharacterToPossessBall()
+                        if char and char.Parent then
+                            lastPlayer = Players:GetPlayerFromCharacter(char)
+                        end
+                    end
+                end)
+
+                local function lastPlayerIsEnemy()
+                    if not lastPlayer then return false end
+                    if lastPlayer == Player then return false end
+                    if not lastPlayer.Team then return true end
+                    return lastPlayer.Team ~= Player.Team
+                end
+
+                -- Detectar tiro (mudança brusca de velocidade para cima)
                 if velocityChange > SHOOT_VELOCITY_CHANGE_THRESHOLD and ballVelocity.Magnitude > MIN_SHOOT_VELOCITY and ballPosition.Y > SHOOT_MIN_HEIGHT then
-                    local toBall = (ballPosition - HumanoidRootPart.Position)
-                    if toBall.Magnitude > 0 then
-                        local ballDirection = ballVelocity.Unit
-                        local dotProduct = ballDirection:Dot(-toBall.Unit)
-                        if dotProduct > 0.4 then
-                            local distance = toBall.Magnitude
-                            if distance <= AUTO_BLOCK_RANGE then
-                                if shootEnabled then Jump() end
+                    -- só reagir se soubermos quem lançou/passou e for inimigo
+                    if not lastPlayerIsEnemy() then
+                        -- ignorar tiros feitos por nós ou por aliados / ou se desconhecido
+                    else
+                        local toBall = (ballPosition - HumanoidRootPart.Position)
+                        if toBall.Magnitude > 0 then
+                            local ballDirection = ballVelocity.Unit
+                            local dotProduct = ballDirection:Dot(-toBall.Unit)
+                            if dotProduct > 0.4 then
+                                local distance = toBall.Magnitude
+                                if distance <= AUTO_BLOCK_RANGE then
+                                    if shootEnabled then Jump() end
+                                end
                             end
                         end
                     end
+                -- Detectar passes (velocidade menor, próximo do chão)
                 elseif ballVelocity.Magnitude > MIN_PASS_VELOCITY and ballPosition.Y < PASS_MAX_HEIGHT then
-                    local toBall = (ballPosition - HumanoidRootPart.Position)
-                    if ballVelocity.Magnitude > 0 then
-                        local timeToReach = toBall.Magnitude / ballVelocity.Magnitude
-                        local predictedPosition = ballPosition + ballVelocity * timeToReach
-                        local distanceToTrajectory = (HumanoidRootPart.Position - predictedPosition).Magnitude
-                        if distanceToTrajectory <= TRAJECTORY_PREDICTION_DISTANCE then
-                            if passEnabled then Jump() end
+                    -- validar possuidor do passe; ignorar se for nós
+                    if lastPlayer and lastPlayer ~= Player and lastPlayerIsEnemy() then
+                        local toBall = (ballPosition - HumanoidRootPart.Position)
+                        if ballVelocity.Magnitude > 0 then
+                            local timeToReach = toBall.Magnitude / ballVelocity.Magnitude
+                            local predictedPosition = ballPosition + ballVelocity * timeToReach
+                            local distanceToTrajectory = (HumanoidRootPart.Position - predictedPosition).Magnitude
+                            if distanceToTrajectory <= TRAJECTORY_PREDICTION_DISTANCE then
+                                if passEnabled then Jump() end
+                            end
                         end
                     end
                 end
