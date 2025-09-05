@@ -128,7 +128,7 @@ local function loadGameScript()
 
 local PlaceIDs = {73708914208963, 130739873848552}
 local isValidPlace = false
-for _, placeId in pairs(PlaceIDs) do
+for _, placeId in ipairs(PlaceIDs) do
     if game.PlaceId == placeId then
         isValidPlace = true
         break
@@ -320,20 +320,20 @@ local NoAbilityCooldownToggle = SectionNoAbility:AddToggle({
                             AbilityController.CooldownUI(AbilityController)
                         end
                         
-                        -- print removido
+
                     end
                 end
             end)
             
             if not success then
-                -- warn removido
+
             end
         else
             -- Desativar No Ability Cooldown
             if NoAbilityCooldownConnection then
                 NoAbilityCooldownConnection:Disconnect()
                 NoAbilityCooldownConnection = nil
-                -- print removido
+
             end
         end
     end
@@ -669,7 +669,7 @@ spawn(function()
     
     Knit = getSafeKnit()
     if Knit then
-        -- print removido
+
         
         -- Aguardar inicialização
         local success = pcall(function()
@@ -679,15 +679,15 @@ spawn(function()
         if success then
             BallController = getSafeBallController()
             if BallController then
-                -- print removido
+
             else
-                -- warn removido
+
             end
         else
-            -- warn removido
+
         end
     else
-        -- warn removido
+
     end
 end)
 
@@ -720,7 +720,7 @@ local ballTrajectoryData = {}
 if getgenv().AutoDribbleConnection then
     getgenv().AutoDribbleConnection:Disconnect()
     getgenv().AutoDribbleConnection = nil
-    -- print removido
+
 end
 
 -- =======================
@@ -810,7 +810,7 @@ local function PanicDribble(player, distance)
         PanicAttempts[playerKey] = currentTime
         PlayerLastDribble[playerKey] = currentTime
         GlobalLastDribble = currentTime
-        -- print removido
+
         return true
     end
     return false
@@ -823,12 +823,12 @@ local function UltraDribble(player, distance)
     if currentTime - lastAttempt < 0.01 then return false end
 
     if safeHasBall() then
-    safeDribble()
-    UltraAttempts[playerKey] = currentTime
-    PlayerLastDribble[playerKey] = currentTime
-    GlobalLastDribble = currentTime
-    -- print removido
-    return true
+        safeDribble()
+        UltraAttempts[playerKey] = currentTime
+        PlayerLastDribble[playerKey] = currentTime
+        GlobalLastDribble = currentTime
+
+        return true
     end
     return false
 end
@@ -842,7 +842,7 @@ local function CriticalDribble(player, distance)
         end
         PlayerLastDribble[player.Name] = tick()
         GlobalLastDribble = tick()
-        -- print removido
+
         return true
     end
     return false
@@ -1058,7 +1058,7 @@ local function startAutoDribble()
         attempts = attempts + 1
         
         if BallController and safeHasBall ~= nil then
-            -- print removido
+
             
             getgenv().AutoDribbleConnection = RunService.Heartbeat:Connect(function()
                 if not AutoDribbleToggleFlag then return end -- controle via UI
@@ -1122,19 +1122,20 @@ local function startAutoDribble()
                         safeDribble()
                         PlayerLastDribble[playerKey] = CurrentTime
                         GlobalLastDribble = CurrentTime
-                        -- print removido
+                        local emoji = enemy.distance <= 8 and "⚡" or "🎯"
+
                         return
                     end
                 end
 
                 -- Debug Auto Dribble
                 if #NearbyEnemies > 0 and CurrentTime - LastDebugTime > 3 then
-                    -- print removido
+
                     for i, enemy in ipairs(NearbyEnemies) do
                         if i <= 2 then
                             local lastTime = PlayerLastDribble[enemy.player.Name] or 0
                             local cooldownLeft = math.max(0, PlayerCooldown - (CurrentTime - lastTime))
-                            -- print removido
+
                         end
                     end
                     LastDebugTime = CurrentTime
@@ -1142,11 +1143,11 @@ local function startAutoDribble()
             end)
             return
         elseif attempts < maxAttempts then
-            -- print removido
+
             wait(1)
             tryStart()
         else
-            -- warn removido
+
         end
     end
     
@@ -1255,40 +1256,64 @@ do
     end
 
     local function DetectShootingStance()
+        -- Only attempt stance-based detection when we have a reliable BallController available.
+        -- BallController exposes the last player who possessed/threw the ball; we rely on that
+        -- to avoid triggering on players who are only moving/dribbling or doing pumpfakes.
         if not isEnabledAutoBlock or not Character or not HumanoidRootPart then return end
         if Player.Team == nil then return end
 
-        for _, ply in ipairs(Players:GetPlayers()) do
-            if IsEnemy(ply) and ply.Character then
-                local enemyChar = ply.Character
-                local enemyRoot = enemyChar:FindFirstChild("HumanoidRootPart")
-                local enemyHumanoid = enemyChar:FindFirstChildOfClass("Humanoid")
-                if enemyRoot and enemyHumanoid and enemyHumanoid.Health > 0 then
-                    local distance = (HumanoidRootPart.Position - enemyRoot.Position).Magnitude
-                    if distance <= AUTO_BLOCK_RANGE then
-                        local toMe = (HumanoidRootPart.Position - enemyRoot.Position)
-                        if toMe.Magnitude > 0 then
-                            local toMeUnit = toMe.Unit
-                            local enemyLook = enemyRoot.CFrame.LookVector
-                            local dotProduct = enemyLook:Dot(toMeUnit)
-                            local angle = math.deg(math.acos(math.clamp(dotProduct, -1, 1)))
-                            if angle <= BLOCK_ANGLE then
-                                local isShooting = false
-                                if enemyHumanoid:GetState() == Enum.HumanoidStateType.Jumping then isShooting = true end
-                                local enemyVelocity = enemyRoot.AssemblyLinearVelocity
-                                if enemyVelocity.Y > 12 then isShooting = true end
-                                if enemyRoot.Position.Y > HumanoidRootPart.Position.Y + 6 then isShooting = true end
-                                if isShooting then
-                                    if shootEnabled then
-                                        Jump()
-                                    end
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
+        -- If BallController isn't available, skip stance detection to avoid false positives.
+        if not BallController then
+            return
+        end
+
+        -- Try to get the last player who possessed the ball. If it matches an enemy in range
+        -- and they are actually in a shooting pose, perform the block. This ignores pumpfakes
+        -- because we require the ball-controller to have recent possession data.
+        local success, lastPlayer = pcall(function()
+            if BallController.GetLastPlayerToPossessBall then
+                return BallController:GetLastPlayerToPossessBall()
+            elseif BallController.GetLastPlayerToPossessBallName then
+                return nil
             end
+        end)
+
+        if not success or not lastPlayer then
+            return
+        end
+
+        -- Only consider blocking if the last possessor is an enemy (and not ourselves)
+        if lastPlayer == Player or not IsEnemy(lastPlayer) then
+            return
+        end
+
+        -- Validate that this enemy is near and roughly facing us within the block angle
+        local enemyChar = lastPlayer.Character
+        if not enemyChar then return end
+        local enemyRoot = enemyChar:FindFirstChild("HumanoidRootPart")
+        local enemyHumanoid = enemyChar:FindFirstChildOfClass("Humanoid")
+        if not enemyRoot or not enemyHumanoid or enemyHumanoid.Health <= 0 then return end
+
+        local distance = (HumanoidRootPart.Position - enemyRoot.Position).Magnitude
+        if distance > AUTO_BLOCK_RANGE then return end
+
+        local toMe = (HumanoidRootPart.Position - enemyRoot.Position)
+        if toMe.Magnitude <= 0 then return end
+        local toMeUnit = toMe.Unit
+        local enemyLook = enemyRoot.CFrame.LookVector
+        local dotProduct = enemyLook:Dot(toMeUnit)
+        local angle = math.deg(math.acos(math.clamp(dotProduct, -1, 1)))
+        if angle > BLOCK_ANGLE then return end
+
+        -- Basic checks to ensure the enemy appears to be shooting (jumping or upward velocity)
+        local isShooting = false
+        if enemyHumanoid:GetState() == Enum.HumanoidStateType.Jumping then isShooting = true end
+        local enemyVelocity = enemyRoot.AssemblyLinearVelocity
+        if enemyVelocity.Y > 12 then isShooting = true end
+        if enemyRoot.Position.Y > HumanoidRootPart.Position.Y + 6 then isShooting = true end
+
+        if isShooting and shootEnabled then
+            Jump()
         end
     end
 
@@ -1354,8 +1379,7 @@ local function initializePerfectShot()
         LocalPlayer.CharacterAdded:Wait()
     end
     
-    -- print removido
-    -- print removido
+
     
     setupFallbackSystem()
     setupSubtleCorrection()
@@ -1373,10 +1397,10 @@ spawn(function()
     wait(3) -- Aguardar mais tempo para estabilizar
     local success, errorMsg = pcall(initializePerfectShot)
     if not success then
-        -- warn removido
-        -- print removido
+
     end
 end)
+
 
         end
     },
@@ -1388,7 +1412,7 @@ end)
 
 local PlaceIDs = {73708914208963, 130739873848552}
 local isValidPlace = false
-for _, placeId in pairs(PlaceIDs) do
+for _, placeId in ipairs(PlaceIDs) do
     if game.PlaceId == placeId then
         isValidPlace = true
         break
@@ -1580,20 +1604,20 @@ local NoAbilityCooldownToggle = SectionNoAbility:AddToggle({
                             AbilityController.CooldownUI(AbilityController)
                         end
                         
-                        -- print removido
+
                     end
                 end
             end)
             
             if not success then
-                -- warn removido
+
             end
         else
             -- Desativar No Ability Cooldown
             if NoAbilityCooldownConnection then
                 NoAbilityCooldownConnection:Disconnect()
                 NoAbilityCooldownConnection = nil
-                -- print removido
+
             end
         end
     end
@@ -1929,7 +1953,7 @@ spawn(function()
     
     Knit = getSafeKnit()
     if Knit then
-        -- print removido
+
         
         -- Aguardar inicialização
         local success = pcall(function()
@@ -1939,15 +1963,15 @@ spawn(function()
         if success then
             BallController = getSafeBallController()
             if BallController then
-                -- print removido
+
             else
-                -- warn removido
+
             end
         else
-            -- warn removido
+
         end
     else
-        -- warn removido
+
     end
 end)
 
@@ -1980,7 +2004,7 @@ local ballTrajectoryData = {}
 if getgenv().AutoDribbleConnection then
     getgenv().AutoDribbleConnection:Disconnect()
     getgenv().AutoDribbleConnection = nil
-    -- print removido
+
 end
 
 -- =======================
@@ -2070,7 +2094,7 @@ local function PanicDribble(player, distance)
         PanicAttempts[playerKey] = currentTime
         PlayerLastDribble[playerKey] = currentTime
         GlobalLastDribble = currentTime
-        -- print removido
+
         return true
     end
     return false
@@ -2083,12 +2107,12 @@ local function UltraDribble(player, distance)
     if currentTime - lastAttempt < 0.01 then return false end
 
     if safeHasBall() then
-    safeDribble()
-    UltraAttempts[playerKey] = currentTime
-    PlayerLastDribble[playerKey] = currentTime
-    GlobalLastDribble = currentTime
-    -- print removido
-    return true
+        safeDribble()
+        UltraAttempts[playerKey] = currentTime
+        PlayerLastDribble[playerKey] = currentTime
+        GlobalLastDribble = currentTime
+
+        return true
     end
     return false
 end
@@ -2102,7 +2126,7 @@ local function CriticalDribble(player, distance)
         end
         PlayerLastDribble[player.Name] = tick()
         GlobalLastDribble = tick()
-        -- print removido
+
         return true
     end
     return false
@@ -2318,7 +2342,7 @@ local function startAutoDribble()
         attempts = attempts + 1
         
         if BallController and safeHasBall ~= nil then
-            -- print removido
+
             
             getgenv().AutoDribbleConnection = RunService.Heartbeat:Connect(function()
                 if not AutoDribbleToggleFlag then return end -- controle via UI
@@ -2382,19 +2406,20 @@ local function startAutoDribble()
                         safeDribble()
                         PlayerLastDribble[playerKey] = CurrentTime
                         GlobalLastDribble = CurrentTime
-                        -- print removido
+                        local emoji = enemy.distance <= 8 and "⚡" or "🎯"
+
                         return
                     end
                 end
 
                 -- Debug Auto Dribble
                 if #NearbyEnemies > 0 and CurrentTime - LastDebugTime > 3 then
-                    -- print removido
+
                     for i, enemy in ipairs(NearbyEnemies) do
                         if i <= 2 then
                             local lastTime = PlayerLastDribble[enemy.player.Name] or 0
                             local cooldownLeft = math.max(0, PlayerCooldown - (CurrentTime - lastTime))
-                            -- print removido
+
                         end
                     end
                     LastDebugTime = CurrentTime
@@ -2402,11 +2427,11 @@ local function startAutoDribble()
             end)
             return
         elseif attempts < maxAttempts then
-            -- print removido
+
             wait(1)
             tryStart()
         else
-            -- warn removido
+
         end
     end
     
@@ -2515,40 +2540,64 @@ do
     end
 
     local function DetectShootingStance()
+        -- Only attempt stance-based detection when we have a reliable BallController available.
+        -- BallController exposes the last player who possessed/threw the ball; we rely on that
+        -- to avoid triggering on players who are only moving/dribbling or doing pumpfakes.
         if not isEnabledAutoBlock or not Character or not HumanoidRootPart then return end
         if Player.Team == nil then return end
 
-        for _, ply in ipairs(Players:GetPlayers()) do
-            if IsEnemy(ply) and ply.Character then
-                local enemyChar = ply.Character
-                local enemyRoot = enemyChar:FindFirstChild("HumanoidRootPart")
-                local enemyHumanoid = enemyChar:FindFirstChildOfClass("Humanoid")
-                if enemyRoot and enemyHumanoid and enemyHumanoid.Health > 0 then
-                    local distance = (HumanoidRootPart.Position - enemyRoot.Position).Magnitude
-                    if distance <= AUTO_BLOCK_RANGE then
-                        local toMe = (HumanoidRootPart.Position - enemyRoot.Position)
-                        if toMe.Magnitude > 0 then
-                            local toMeUnit = toMe.Unit
-                            local enemyLook = enemyRoot.CFrame.LookVector
-                            local dotProduct = enemyLook:Dot(toMeUnit)
-                            local angle = math.deg(math.acos(math.clamp(dotProduct, -1, 1)))
-                            if angle <= BLOCK_ANGLE then
-                                local isShooting = false
-                                if enemyHumanoid:GetState() == Enum.HumanoidStateType.Jumping then isShooting = true end
-                                local enemyVelocity = enemyRoot.AssemblyLinearVelocity
-                                if enemyVelocity.Y > 12 then isShooting = true end
-                                if enemyRoot.Position.Y > HumanoidRootPart.Position.Y + 6 then isShooting = true end
-                                if isShooting then
-                                    if shootEnabled then
-                                        Jump()
-                                    end
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
+        -- If BallController isn't available, skip stance detection to avoid false positives.
+        if not BallController then
+            return
+        end
+
+        -- Try to get the last player who possessed the ball. If it matches an enemy in range
+        -- and they are actually in a shooting pose, perform the block. This ignores pumpfakes
+        -- because we require the ball-controller to have recent possession data.
+        local success, lastPlayer = pcall(function()
+            if BallController.GetLastPlayerToPossessBall then
+                return BallController:GetLastPlayerToPossessBall()
+            elseif BallController.GetLastPlayerToPossessBallName then
+                return nil
             end
+        end)
+
+        if not success or not lastPlayer then
+            return
+        end
+
+        -- Only consider blocking if the last possessor is an enemy (and not ourselves)
+        if lastPlayer == Player or not IsEnemy(lastPlayer) then
+            return
+        end
+
+        -- Validate that this enemy is near and roughly facing us within the block angle
+        local enemyChar = lastPlayer.Character
+        if not enemyChar then return end
+        local enemyRoot = enemyChar:FindFirstChild("HumanoidRootPart")
+        local enemyHumanoid = enemyChar:FindFirstChildOfClass("Humanoid")
+        if not enemyRoot or not enemyHumanoid or enemyHumanoid.Health <= 0 then return end
+
+        local distance = (HumanoidRootPart.Position - enemyRoot.Position).Magnitude
+        if distance > AUTO_BLOCK_RANGE then return end
+
+        local toMe = (HumanoidRootPart.Position - enemyRoot.Position)
+        if toMe.Magnitude <= 0 then return end
+        local toMeUnit = toMe.Unit
+        local enemyLook = enemyRoot.CFrame.LookVector
+        local dotProduct = enemyLook:Dot(toMeUnit)
+        local angle = math.deg(math.acos(math.clamp(dotProduct, -1, 1)))
+        if angle > BLOCK_ANGLE then return end
+
+        -- Basic checks to ensure the enemy appears to be shooting (jumping or upward velocity)
+        local isShooting = false
+        if enemyHumanoid:GetState() == Enum.HumanoidStateType.Jumping then isShooting = true end
+        local enemyVelocity = enemyRoot.AssemblyLinearVelocity
+        if enemyVelocity.Y > 12 then isShooting = true end
+        if enemyRoot.Position.Y > HumanoidRootPart.Position.Y + 6 then isShooting = true end
+
+        if isShooting and shootEnabled then
+            Jump()
         end
     end
 
@@ -2614,8 +2663,7 @@ local function initializePerfectShot()
         LocalPlayer.CharacterAdded:Wait()
     end
     
-    -- print removido
-    -- print removido
+
     
     setupFallbackSystem()
     setupSubtleCorrection()
@@ -2633,10 +2681,10 @@ spawn(function()
     wait(3) -- Aguardar mais tempo para estabilizar
     local success, errorMsg = pcall(initializePerfectShot)
     if not success then
-        -- warn removido
-        -- print removido
+
     end
 end)
+
 
         end
     },
