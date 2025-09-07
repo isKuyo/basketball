@@ -1,4 +1,3 @@
--- Upioguard HUB Script
 -- Script principal único com suporte automático a jogos
 -- Funciona offline sem dependências externas
 -- Gerado automaticamente pelo build_hub.py
@@ -7,14 +6,13 @@
 local player = game:GetService("Players").LocalPlayer
 local current_place_id = game.PlaceId
 
--- Get executor info
 local _identify_executor = identifyexecutor or getexecutorname or function() return "Unknown" end
 local executor_name = _identify_executor()
 
--- Use existing ScreenGui named "Wisper" and create new design inside it
+-- Usar ScreenGui existente "Wisper"
 local WisperGui = player:WaitForChild("PlayerGui"):WaitForChild("Wisper")
 
--- Main container
+-- Instâncias principais do novo design
 local WisperExec = Instance.new("Frame")
 local UIGradientBackground = Instance.new("UIGradient")
 local UICornerBackground = Instance.new("UICorner")
@@ -22,18 +20,19 @@ local BackgroundStroke = Instance.new("UIStroke")
 local BackgroundStrokeGradient = Instance.new("UIGradient")
 local BackgroundAspectRatio = Instance.new("UIAspectRatioConstraint")
 
--- Children
+-- Filhos
 local Title = Instance.new("TextLabel")
 local Text = Instance.new("TextLabel")
 local Icon = Instance.new("ImageLabel")
 
--- Parent and base props
+-- Propriedades do container
 WisperExec.Name = "WisperExec"
 WisperExec.Parent = WisperGui
 WisperExec.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 WisperExec.BorderSizePixel = 0
 WisperExec.Size = UDim2.new(0.0963, 0, 0.0799, 0)
 WisperExec.Position = UDim2.new(-1, 0, 0.9128, 0)
+WisperExec.ZIndex = 1 -- manter abaixo de outros overlays
 
 UIGradientBackground.Color = ColorSequence.new{
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(17, 16, 26)),
@@ -69,12 +68,12 @@ spawn(function()
 	end
 end)
 
--- Title label (left-aligned)
+-- Título com shine
 Title.Name = "Title"
 Title.Parent = WisperExec
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.016, 2, 0.034, 0)
-Title.Size = UDim2.new(0.4, 0, 0.35, 0)
+Title.Size = UDim2.new(0.136, 0, 0.163, 0)
 Title.Font = Enum.Font.SourceSans
 Title.Text = "wisper"
 Title.TextColor3 = Color3.fromRGB(160, 160, 160)
@@ -82,7 +81,6 @@ Title.TextScaled = true
 Title.TextWrapped = true
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Subtle shine over title
 do
 	local ShineWidth = 0.15
 	local ShineSpeed = 1
@@ -116,7 +114,7 @@ do
 	end)
 end
 
--- Status text
+-- Texto principal/status
 Text.Name = "Text"
 Text.Parent = WisperExec
 Text.BackgroundTransparency = 1
@@ -128,65 +126,36 @@ Text.TextColor3 = Color3.fromRGB(255, 255, 255)
 Text.TextScaled = true
 Text.TextWrapped = true
 
--- Icon with game image
+-- Ícone com imagem do jogo (sem tween)
 Icon.Name = "Icon"
 Icon.Parent = WisperExec
 Icon.BackgroundTransparency = 1
 Icon.Position = UDim2.new(0.4497, 0, 0.0429, 0)
 Icon.Size = UDim2.new(0.0931, 0, 0.2917, 0)
-Icon.Image = string.format("rbxthumb://type=GameIcon&id=%d&w=150&h=150", current_place_id)
-
--- Gentle floating animation for icon
-do
-	local OriginalPosition = Icon.Position
-	local Amplitude = 2
-	local Speed = 0.8
-	local TweenService = game:GetService("TweenService")
-	local function CreateIconTween(target, direction)
-		local info = TweenInfo.new(1 / Speed / 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-		local goal = { Position = OriginalPosition + UDim2.new(0, 0, 0, Amplitude * direction) }
-		return TweenService:Create(target, info, goal)
-	end
-	spawn(function()
-		local direction = 1
-		while Icon.Parent do
-			local tween = CreateIconTween(Icon, direction)
-			tween:Play()
-			tween.Completed:Wait()
-			direction = -direction
-		end
-	end)
-end
-
--- Entrance tween
-do
-	local TweenService = game:GetService("TweenService")
-	local FinalPosition = UDim2.new(0.0032, 0, 0.9128, 0)
-	local showTween = TweenService:Create(WisperExec, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = FinalPosition })
-	showTween:Play()
-end
+Icon.Image = "rbxthumb://type=GameIcon&id=" .. tostring(current_place_id) .. "&w=150&h=150"
+Icon.ScaleType = Enum.ScaleType.Fit
 
 -- Function to update GUI
 local function updateGui(gameName, status)
-	Title.Text = gameName
-	Text.Text = status .. " (" .. executor_name .. ")"
+	Title.Text = "wisper"
+	Text.Text = (status or "") .. (executor_name and (" (" .. executor_name .. ")") or "")
 end
 
--- Function to animate bar and destroy GUI
-local function animateAndDestroy()
-	local startTime = tick()
-	local duration = 5
-	local initialThickness = BackgroundStroke.Thickness
-	game:GetService("RunService").RenderStepped:Connect(function()
-		local elapsed = tick() - startTime
-		if elapsed >= duration then
-			if WisperExec and WisperExec.Parent then WisperExec:Destroy() end
-			return
-		end
-		-- optional subtle pulse on border during lifetime
-		local t = math.abs(math.sin(elapsed * 2))
-		BackgroundStroke.Thickness = initialThickness + t * 0.5
-	end)
+-- Tween de entrada do container
+do
+	local TweenService = game:GetService("TweenService")
+	local finalPos = UDim2.new(0.0032, 0, 0.9128, 0)
+	local showTween = TweenService:Create(WisperExec, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = finalPos})
+	showTween:Play()
+end
+
+-- Função de saída opcional (move para fora e oculta)
+local function hideAndCleanup()
+	local TweenService = game:GetService("TweenService")
+	local hideTween = TweenService:Create(WisperExec, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(-1, 0, 0.9128, 0)})
+	hideTween:Play()
+	hideTween.Completed:Wait()
+	WisperExec.Visible = false
 end
 
 -- Esta função será substituída durante o build com os scripts dos jogos
