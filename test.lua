@@ -11,109 +11,182 @@ local current_place_id = game.PlaceId
 local _identify_executor = identifyexecutor or getexecutorname or function() return "Unknown" end
 local executor_name = _identify_executor()
 
--- Create GUI
-local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local UICorner = Instance.new("UICorner")
-local Top = Instance.new("Frame")
-local UICorner_2 = Instance.new("UICorner")
-local Down = Instance.new("Frame")
+-- Use existing ScreenGui named "Wisper" and create new design inside it
+local WisperGui = player:WaitForChild("PlayerGui"):WaitForChild("Wisper")
+
+-- Main container
+local WisperExec = Instance.new("Frame")
+local UIGradientBackground = Instance.new("UIGradient")
+local UICornerBackground = Instance.new("UICorner")
+local BackgroundStroke = Instance.new("UIStroke")
+local BackgroundStrokeGradient = Instance.new("UIGradient")
+local BackgroundAspectRatio = Instance.new("UIAspectRatioConstraint")
+
+-- Children
 local Title = Instance.new("TextLabel")
 local Text = Instance.new("TextLabel")
-local Bar = Instance.new("Frame")
+local Icon = Instance.new("ImageLabel")
 
--- Properties:
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+-- Parent and base props
+WisperExec.Name = "WisperExec"
+WisperExec.Parent = WisperGui
+WisperExec.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+WisperExec.BorderSizePixel = 0
+WisperExec.Size = UDim2.new(0.0963, 0, 0.0799, 0)
+WisperExec.Position = UDim2.new(-1, 0, 0.9128, 0)
 
-Frame.Parent = ScreenGui
-Frame.BackgroundColor3 = Color3.fromRGB(27, 27, 28)
-Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Frame.BorderSizePixel = 0
-Frame.Position = UDim2.new(0.00365130068, 0, 0.908758104, 0)
-Frame.Size = UDim2.new(0, 192, 0, 71)
+UIGradientBackground.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(17, 16, 26)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(28, 19, 43))
+}
+UIGradientBackground.Rotation = 60
+UIGradientBackground.Parent = WisperExec
 
-UICorner.Parent = Frame
+UICornerBackground.Parent = WisperExec
 
-Top.Name = "Top"
-Top.Parent = Frame
-Top.BackgroundColor3 = Color3.fromRGB(44, 44, 46)
-Top.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Top.BorderSizePixel = 0
-Top.Size = UDim2.new(0, 192, 0, 17)
+BackgroundAspectRatio.AspectRatio = 2.949
+BackgroundAspectRatio.Parent = WisperExec
 
-UICorner_2.Parent = Top
+BackgroundStroke.Parent = WisperExec
+BackgroundStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+BackgroundStroke.Color = Color3.fromRGB(255, 255, 255)
+BackgroundStroke.Thickness = 1
+BackgroundStroke.Transparency = 0.6
 
-Down.Name = "Down"
-Down.Parent = Top
-Down.BackgroundColor3 = Color3.fromRGB(44, 44, 46)
-Down.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Down.BorderSizePixel = 0
-Down.Position = UDim2.new(0, 0, 0.682656705, 0)
-Down.Size = UDim2.new(0, 192, 0, 7)
+BackgroundStrokeGradient.Parent = BackgroundStroke
+BackgroundStrokeGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(85, 170, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 170, 255))
+}
+BackgroundStrokeGradient.Rotation = 0
 
+spawn(function()
+	local Rotation = 0
+	while WisperExec.Parent do
+		local Delta = game:GetService("RunService").RenderStepped:Wait()
+		Rotation = (Rotation + Delta * 50) % 360
+		BackgroundStrokeGradient.Rotation = Rotation
+	end
+end)
+
+-- Title label (left-aligned)
 Title.Name = "Title"
-Title.Parent = Top
-Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Title.BackgroundTransparency = 1.000
-Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Title.BorderSizePixel = 0
-Title.Position = UDim2.new(0.0206915941, 0, 0.121251725, 0)
-Title.Size = UDim2.new(0, 180, 0, 14)
+Title.Parent = WisperExec
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0.016, 2, 0.034, 0)
+Title.Size = UDim2.new(0.4, 0, 0.35, 0)
 Title.Font = Enum.Font.SourceSans
-Title.Text = "Unknown"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Text = "wisper"
+Title.TextColor3 = Color3.fromRGB(160, 160, 160)
 Title.TextScaled = true
-Title.TextSize = 14.000
 Title.TextWrapped = true
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Subtle shine over title
+do
+	local ShineWidth = 0.15
+	local ShineSpeed = 1
+	local TitleShine = Instance.new("UIGradient")
+	TitleShine.Parent = Title
+	TitleShine.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0.0, Color3.fromRGB(160, 160, 160)),
+		ColorSequenceKeypoint.new(0.5 - ShineWidth, Color3.fromRGB(160, 160, 160)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.5 + ShineWidth, Color3.fromRGB(160, 160, 160)),
+		ColorSequenceKeypoint.new(1.0, Color3.fromRGB(160, 160, 160))
+	}
+	TitleShine.Transparency = NumberSequence.new{
+		NumberSequenceKeypoint.new(0.0, 0),
+		NumberSequenceKeypoint.new(0.5 - ShineWidth, 0),
+		NumberSequenceKeypoint.new(0.5, 0),
+		NumberSequenceKeypoint.new(0.5 + ShineWidth, 0),
+		NumberSequenceKeypoint.new(1.0, 0)
+	}
+	spawn(function()
+		local Offset = 0
+		while Title.Parent do
+			local Delta = game:GetService("RunService").RenderStepped:Wait()
+			Offset = Offset + Delta * ShineSpeed
+			TitleShine.Offset = Vector2.new(-0.5 + Offset, 0)
+			if Offset >= 1.5 then
+				Offset = 0
+				wait(1)
+			end
+		end
+	end)
+end
+
+-- Status text
 Text.Name = "Text"
-Text.Parent = Frame
-Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Text.BackgroundTransparency = 1.000
-Text.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Text.BorderSizePixel = 0
-Text.Position = UDim2.new(0.076854229, 0, 0.421218216, 0)
-Text.Size = UDim2.new(0, 161, 0, 21)
+Text.Parent = WisperExec
+Text.BackgroundTransparency = 1
+Text.Position = UDim2.new(0.048, 0, 0.343, 0)
+Text.Size = UDim2.new(0.897, 0, 0.369, 0)
 Text.Font = Enum.Font.SourceSans
 Text.Text = "Checking game support... (" .. executor_name .. ")"
 Text.TextColor3 = Color3.fromRGB(255, 255, 255)
 Text.TextScaled = true
-Text.TextSize = 14.000
 Text.TextWrapped = true
 
-Bar.Name = "Bar"
-Bar.Parent = Frame
-Bar.BackgroundColor3 = Color3.fromRGB(86, 134, 254)
-Bar.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Bar.BorderSizePixel = 0
-Bar.Position = UDim2.new(0, 0, 0.991847098, 0)
-Bar.Size = UDim2.new(0, 192, 0, -4)
+-- Icon with game image
+Icon.Name = "Icon"
+Icon.Parent = WisperExec
+Icon.BackgroundTransparency = 1
+Icon.Position = UDim2.new(0.4497, 0, 0.0429, 0)
+Icon.Size = UDim2.new(0.0931, 0, 0.2917, 0)
+Icon.Image = string.format("rbxthumb://type=GameIcon&id=%d&w=150&h=150", current_place_id)
+
+-- Gentle floating animation for icon
+do
+	local OriginalPosition = Icon.Position
+	local Amplitude = 2
+	local Speed = 0.8
+	local TweenService = game:GetService("TweenService")
+	local function CreateIconTween(target, direction)
+		local info = TweenInfo.new(1 / Speed / 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+		local goal = { Position = OriginalPosition + UDim2.new(0, 0, 0, Amplitude * direction) }
+		return TweenService:Create(target, info, goal)
+	end
+	spawn(function()
+		local direction = 1
+		while Icon.Parent do
+			local tween = CreateIconTween(Icon, direction)
+			tween:Play()
+			tween.Completed:Wait()
+			direction = -direction
+		end
+	end)
+end
+
+-- Entrance tween
+do
+	local TweenService = game:GetService("TweenService")
+	local FinalPosition = UDim2.new(0.0032, 0, 0.9128, 0)
+	local showTween = TweenService:Create(WisperExec, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = FinalPosition })
+	showTween:Play()
+end
 
 -- Function to update GUI
 local function updateGui(gameName, status)
-    Title.Text = gameName
-    Text.Text = status .. " (" .. executor_name .. ")"
+	Title.Text = gameName
+	Text.Text = status .. " (" .. executor_name .. ")"
 end
 
 -- Function to animate bar and destroy GUI
 local function animateAndDestroy()
-    local startTime = tick()
-    local duration = 5 -- 5 seconds
-    local initialSize = 192
-    
-    game:GetService("RunService").RenderStepped:Connect(function()
-        local elapsed = tick() - startTime
-        if elapsed >= duration then
-            ScreenGui:Destroy()
-            return
-        end
-        
-        local progress = elapsed / duration
-        local newSize = initialSize * (1 - progress)
-        Bar.Size = UDim2.new(0, newSize, 0, -4)
-    end)
+	local startTime = tick()
+	local duration = 5
+	local initialThickness = BackgroundStroke.Thickness
+	game:GetService("RunService").RenderStepped:Connect(function()
+		local elapsed = tick() - startTime
+		if elapsed >= duration then
+			if WisperExec and WisperExec.Parent then WisperExec:Destroy() end
+			return
+		end
+		-- optional subtle pulse on border during lifetime
+		local t = math.abs(math.sin(elapsed * 2))
+		BackgroundStroke.Thickness = initialThickness + t * 0.5
+	end)
 end
 
 -- Esta função será substituída durante o build com os scripts dos jogos
