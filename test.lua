@@ -9,54 +9,53 @@ local current_place_id = game.PlaceId
 local _identify_executor = identifyexecutor or getexecutorname or function() return "Unknown" end
 local executor_name = _identify_executor()
 
--- Verificar se existe ScreenGui "Wisper", senão criar
-local playerGui = player:WaitForChild("PlayerGui")
-local WisperGui = playerGui:FindFirstChild("Wisper")
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
-if not WisperGui then
-    -- Criar novo ScreenGui se não existir
-    WisperGui = Instance.new("ScreenGui")
-    WisperGui.Name = "Wisper"
-    WisperGui.Parent = playerGui
-    WisperGui.ResetOnSpawn = false
-    WisperGui.DisplayOrder = 100
-end
+local Player = Players.LocalPlayer
 
--- Instâncias principais do novo design
-local WisperExec = Instance.new("Frame")
+-- Instâncias
+local Wisper = Instance.new("ScreenGui")
+local Background = Instance.new("Frame")
 local UIGradientBackground = Instance.new("UIGradient")
 local UICornerBackground = Instance.new("UICorner")
+local TextLabelMain = Instance.new("TextLabel")
+local TitleLabel = Instance.new("TextLabel")
+local Icon = Instance.new("ImageLabel")
+local SecondsLabel = Instance.new("TextLabel")
+local BackgroundAspectRatio = Instance.new("UIAspectRatioConstraint")
 local BackgroundStroke = Instance.new("UIStroke")
 local BackgroundStrokeGradient = Instance.new("UIGradient")
-local BackgroundAspectRatio = Instance.new("UIAspectRatioConstraint")
 
--- Filhos
-local Title = Instance.new("TextLabel")
-local Text = Instance.new("TextLabel")
-local Icon = Instance.new("ImageLabel")
+-- Configuração GUI
+Wisper.Name = "Wisper"
+Wisper.Parent = Player:WaitForChild("PlayerGui")
+Wisper.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Propriedades do container
-WisperExec.Name = "Frame"
-WisperExec.Parent = WisperGui
-WisperExec.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-WisperExec.BorderSizePixel = 0
-WisperExec.Size = UDim2.new(0.0963, 0, 0.0799, 0)
-WisperExec.Position = UDim2.new(-1, 0, 0.9128, 0)
-WisperExec.ZIndex = 1 -- manter abaixo de outros overlays
+-- Background
+Background.Name = "Background"
+Background.Parent = Wisper
+Background.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Background.BorderSizePixel = 0
+Background.Size = UDim2.new(0.0963, 0, 0.0799, 0)
+Background.Position = UDim2.new(-1, 0, 0.9128, 0) -- começa escondido à esquerda
 
 UIGradientBackground.Color = ColorSequence.new{
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(17, 16, 26)),
 	ColorSequenceKeypoint.new(1, Color3.fromRGB(28, 19, 43))
 }
 UIGradientBackground.Rotation = 60
-UIGradientBackground.Parent = WisperExec
+UIGradientBackground.Parent = Background
 
-UICornerBackground.Parent = WisperExec
+UICornerBackground.Parent = Background
 
 BackgroundAspectRatio.AspectRatio = 2.949
-BackgroundAspectRatio.Parent = WisperExec
+BackgroundAspectRatio.Parent = Background
 
-BackgroundStroke.Parent = WisperExec
+-- Stroke animado
+BackgroundStroke.Parent = Background
 BackgroundStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 BackgroundStroke.Color = Color3.fromRGB(255, 255, 255)
 BackgroundStroke.Thickness = 1
@@ -71,101 +70,145 @@ BackgroundStrokeGradient.Rotation = 0
 
 spawn(function()
 	local Rotation = 0
-	while WisperExec.Parent do
-		local Delta = game:GetService("RunService").RenderStepped:Wait()
+	while true do
+		local Delta = RunService.RenderStepped:Wait()
 		Rotation = (Rotation + Delta * 50) % 360
 		BackgroundStrokeGradient.Rotation = Rotation
 	end
 end)
 
--- Título com shine
-Title.Name = "Title"
-Title.Parent = WisperExec
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0.016, 2, 0.034, 0)
-Title.Size = UDim2.new(0.136, 0, 0.163, 0)
-Title.Font = Enum.Font.SourceSans
-Title.Text = "wisper"
-Title.TextColor3 = Color3.fromRGB(160, 160, 160)
-Title.TextScaled = true
-Title.TextWrapped = true
-Title.TextXAlignment = Enum.TextXAlignment.Left
+-- Texto principal
+TextLabelMain.Name = "Text"
+TextLabelMain.Parent = Background
+TextLabelMain.BackgroundTransparency = 1
+TextLabelMain.Position = UDim2.new(0.048, 0, 0.343, 0)
+TextLabelMain.Size = UDim2.new(0.897, 0, 0.369, 0)
+TextLabelMain.Font = Enum.Font.SourceSans
+TextLabelMain.Text = "Checking game support... (" .. executor_name .. ")"
+TextLabelMain.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabelMain.TextScaled = true
+TextLabelMain.TextWrapped = true
 
-do
-	local ShineWidth = 0.15
-	local ShineSpeed = 1
-	local TitleShine = Instance.new("UIGradient")
-	TitleShine.Parent = Title
-	TitleShine.Color = ColorSequence.new{
-		ColorSequenceKeypoint.new(0.0, Color3.fromRGB(160, 160, 160)),
-		ColorSequenceKeypoint.new(0.5 - ShineWidth, Color3.fromRGB(160, 160, 160)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.5 + ShineWidth, Color3.fromRGB(160, 160, 160)),
-		ColorSequenceKeypoint.new(1.0, Color3.fromRGB(160, 160, 160))
-	}
-	TitleShine.Transparency = NumberSequence.new{
-		NumberSequenceKeypoint.new(0.0, 0),
-		NumberSequenceKeypoint.new(0.5 - ShineWidth, 0),
-		NumberSequenceKeypoint.new(0.5, 0),
-		NumberSequenceKeypoint.new(0.5 + ShineWidth, 0),
-		NumberSequenceKeypoint.new(1.0, 0)
-	}
-	spawn(function()
-		local Offset = 0
-		while Title.Parent do
-			local Delta = game:GetService("RunService").RenderStepped:Wait()
-			Offset = Offset + Delta * ShineSpeed
-			TitleShine.Offset = Vector2.new(-0.5 + Offset, 0)
-			if Offset >= 1.5 then
-				Offset = 0
-				wait(1)
-			end
+-- Title com shine
+TitleLabel.Name = "Title"
+TitleLabel.Parent = Background
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0.016, 2, 0.034, 0)
+TitleLabel.Size = UDim2.new(0.136, 0, 0.163, 0)
+TitleLabel.Font = Enum.Font.SourceSans
+TitleLabel.Text = "wisper"
+TitleLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
+TitleLabel.TextScaled = true
+TitleLabel.TextWrapped = true
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local ShineWidth = 0.15
+local ShineSpeed = 1
+local TitleShine = Instance.new("UIGradient")
+TitleShine.Parent = TitleLabel
+TitleShine.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0.0, Color3.fromRGB(160, 160, 160)),
+	ColorSequenceKeypoint.new(0.5 - ShineWidth, Color3.fromRGB(160, 160, 160)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+	ColorSequenceKeypoint.new(0.5 + ShineWidth, Color3.fromRGB(160, 160, 160)),
+	ColorSequenceKeypoint.new(1.0, Color3.fromRGB(160, 160, 160))
+}
+TitleShine.Transparency = NumberSequence.new{
+	NumberSequenceKeypoint.new(0.0, 0),
+	NumberSequenceKeypoint.new(0.5 - ShineWidth, 0),
+	NumberSequenceKeypoint.new(0.5, 0),
+	NumberSequenceKeypoint.new(0.5 + ShineWidth, 0),
+	NumberSequenceKeypoint.new(1.0, 0)
+}
+
+spawn(function()
+	local Offset = 0
+	while true do
+		local Delta = RunService.RenderStepped:Wait()
+		Offset = Offset + Delta * ShineSpeed
+		TitleShine.Offset = Vector2.new(-0.5 + Offset, 0)
+		if Offset >= 1.5 then
+			Offset = 0
+			wait(1)
 		end
-	end)
-end
+	end
+end)
 
--- Texto principal/status
-Text.Name = "Text"
-Text.Parent = WisperExec
-Text.BackgroundTransparency = 1
-Text.Position = UDim2.new(0.048, 0, 0.343, 0)
-Text.Size = UDim2.new(0.897, 0, 0.369, 0)
-Text.Font = Enum.Font.SourceSans
-Text.Text = "Checking game support... (" .. executor_name .. ")"
-Text.TextColor3 = Color3.fromRGB(255, 255, 255)
-Text.TextScaled = true
-Text.TextWrapped = true
-
--- Ícone com imagem do jogo (sem tween)
+-- Ícone do jogo
 Icon.Name = "Icon"
-Icon.Parent = WisperExec
+Icon.Parent = Background
 Icon.BackgroundTransparency = 1
 Icon.Position = UDim2.new(0.4497, 0, 0.0429, 0)
 Icon.Size = UDim2.new(0.0931, 0, 0.2917, 0)
 Icon.Image = "rbxthumb://type=GameIcon&id=" .. tostring(current_place_id) .. "&w=150&h=150"
-Icon.ScaleType = Enum.ScaleType.Fit
+
+SecondsLabel.Name = "Seconds"
+SecondsLabel.Parent = Background
+SecondsLabel.BackgroundTransparency = 1
+SecondsLabel.Position = UDim2.new(0.455, 0, 0.7122, 0)
+SecondsLabel.Size = UDim2.new(0.0878, 0, 0.2317, 0)
+SecondsLabel.Visible = false
+SecondsLabel.Font = Enum.Font.SourceSans
+SecondsLabel.Text = "3s"
+SecondsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SecondsLabel.TextScaled = true
+SecondsLabel.TextWrapped = true
+
+-- Tween de entrada do Background
+local FinalPosition = UDim2.new(0.0032, 0, 0.9128, 0)
+local ShowTween = TweenService:Create(
+	Background,
+	TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+	{Position = FinalPosition}
+)
+ShowTween:Play()
+
+-- Icon Tween Animation
+local OriginalIconPosition = Icon.Position
+local Amplitude = 2
+local Speed = 0.8
+
+local function CreateIconTween(Target, Direction)
+	local TweenInfoObj = TweenInfo.new(
+		1 / Speed / 2,
+		Enum.EasingStyle.Sine,
+		Enum.EasingDirection.InOut
+	)
+	local Goal = {Position = OriginalIconPosition + UDim2.new(0, 0, 0, Amplitude * Direction)}
+	return TweenService:Create(Target, TweenInfoObj, Goal)
+end
+
+spawn(function()
+	local Direction = 1
+	while true do
+		local TweenIcon = CreateIconTween(Icon, Direction)
+		TweenIcon:Play()
+		TweenIcon.Completed:Wait()
+		Direction = Direction * -1
+	end
+end)
 
 -- Function to update GUI
 local function updateGui(gameName, status)
-	Title.Text = "wisper"
-	Text.Text = (status or "") .. (executor_name and (" (" .. executor_name .. ")") or "")
+	TitleLabel.Text = "wisper"
+	TextLabelMain.Text = (status or "") .. (executor_name and (" (" .. executor_name .. ")") or "")
 end
 
 -- Tween de entrada do container
 do
 	local TweenService = game:GetService("TweenService")
 	local finalPos = UDim2.new(0.0032, 0, 0.9128, 0)
-	local showTween = TweenService:Create(WisperExec, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = finalPos})
+	local showTween = TweenService:Create(Background, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = finalPos})
 	showTween:Play()
 end
 
 -- Função de saída opcional (move para fora e oculta)
 local function hideAndCleanup()
 	local TweenService = game:GetService("TweenService")
-	local hideTween = TweenService:Create(WisperExec, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(-1, 0, 0.9128, 0)})
+	local hideTween = TweenService:Create(Background, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(-1, 0, 0.9128, 0)})
 	hideTween:Play()
 	hideTween.Completed:Wait()
-	WisperExec.Visible = false
+	Background.Visible = false
 end
 
 -- Função de animação e limpeza (compatibilidade com build_hub.py)
