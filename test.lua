@@ -36,7 +36,7 @@ local Text = Instance.new("TextLabel")
 local Icon = Instance.new("ImageLabel")
 
 -- Propriedades do container
-WisperExec.Name = "WisperExec"
+WisperExec.Name = "Frame"
 WisperExec.Parent = WisperGui
 WisperExec.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 WisperExec.BorderSizePixel = 0
@@ -166,6 +166,12 @@ local function hideAndCleanup()
 	hideTween:Play()
 	hideTween.Completed:Wait()
 	WisperExec.Visible = false
+end
+
+-- Função de animação e limpeza (compatibilidade com build_hub.py)
+local function animateAndDestroy()
+	task.wait(2) -- Aguarda um pouco antes de ocultar
+	hideAndCleanup()
 end
 
 -- Esta função será substituída durante o build com os scripts dos jogos
