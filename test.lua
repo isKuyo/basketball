@@ -222,7 +222,7 @@ local Decimals = 4
 local Clock = os.clock()
 local ValueText = "Value Is Now :"
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua"))({
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/isKuyo/UI/refs/heads/main/Source.lua"))({
     cheatname = "Basketball Script v2.0", 
     gamename  = "Basketball",
 })
@@ -1558,7 +1558,7 @@ local Decimals = 4
 local Clock = os.clock()
 local ValueText = "Value Is Now :"
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua"))({
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/isKuyo/UI/refs/heads/main/Source.lua"))({
     cheatname = "Basketball Script v2.0", 
     gamename  = "Basketball",
 })
@@ -2900,93 +2900,17 @@ if not LPH_OBFUSCATED then
     LPH_ENCSTR         = function(...) return ... end 
 end
 
--- =========================
--- UI LIB (Tokyo)
--- =========================
+-- Carrega a UI Library
 local Decimals = 4
 local Clock = os.clock()
 local ValueText = "Value Is Now :"
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua"))({
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua"))({
     cheatname = "rip cw", -- watermark text
-    gamename  = "Combat Warriors", -- watermark text
+    gamename = "Combat Warriors", -- watermark text
 })
 
-Library:init()
-
-local WindowMain = Library.NewWindow({
-    title = "rip cw | Combat Warriors",
-    size  = UDim2.new(0, 510, 0, 520)
-})
-
-local MainTab     = WindowMain:AddTab("  Main  ")
-local SettingsTab = Library:CreateSettingsTab(WindowMain)
-
--- Helpers para "mostrar/ocultar" elementos
-local function SetVisible(Element, Visible)
-    local ok = false
-    if Element and typeof(Element) == "table" then
-        ok = pcall(function()
-            if Element.SetVisible then
-                Element:SetVisible(Visible)
-            elseif Element.Object and Element.Object.Visible ~= nil then
-                Element.Object.Visible = Visible
-            elseif Element.Main and Element.Main.Visible ~= nil then
-                Element.Main.Visible = Visible
-            elseif Element.Frame and Element.Frame.Visible ~= nil then
-                Element.Frame.Visible = Visible
-            end
-        end)
-    end
-    return ok
-end
-
-local function SetGroupVisible(GroupArray, Visible)
-    for _, el in ipairs(GroupArray) do
-        SetVisible(el, Visible)
-    end
-end
-
-local function RefreshUI()
-    pcall(function()
-        if WindowMain and WindowMain.Refresh then WindowMain:Refresh() end
-    end)
-    pcall(function()
-        if MainTab and MainTab.Refresh then MainTab:Refresh() end
-    end)
-    pcall(function()
-        if MainTab and MainTab.UpdateSections then MainTab:UpdateSections() end
-    end)
-    if SettingsTab and SettingsTab.SetActive and MainTab and MainTab.SetActive then
-        pcall(function() SettingsTab:SetActive() end)
-        task.wait(0.03)
-        pcall(function() MainTab:SetActive() end)
-    end
-end
-
--- Força atualização imediata do layout
-task.spawn(function()
-    -- Forçar refresh múltiplas vezes para garantir
-    for i = 1, 3 do
-        task.wait(0.1)
-        pcall(function() if WindowMain and WindowMain.Refresh then WindowMain:Refresh() end end)
-        pcall(function() if MainTab and MainTab.Refresh then MainTab:Refresh() end end)
-        pcall(function() if MainTab and MainTab.UpdateSections then MainTab:UpdateSections() end end)
-        -- Simular troca de aba para forçar refresh
-        if SettingsTab then
-            pcall(function() SettingsTab:SetActive() end)
-            task.wait(0.05)
-            pcall(function() MainTab:SetActive() end)
-        end
-    end
-end)
-
--- =========================
--- GRUPOS NA ABA PRINCIPAL
--- =========================
-local SectionPlayer         = MainTab:AddSection("Player Features", 3)
-local SectionSilentAim      = MainTab:AddSection("Silent Aim Settings", 1)
-local SectionAutoParry      = MainTab:AddSection("Auto Parry Settings", 2)
+library:init()
 
 -- Serviços
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -3027,40 +2951,21 @@ end)
 local PlayerCharacters = Workspace:FindFirstChild("PlayerCharacters")
 local R6BodyParts = {"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}
 
--- Estados das funcionalidades (flags de controle)
+-- Estados das funcionalidades
 local InfiniteStaminaEnabled = false
 local AutoParryEnabled = false
 local SilentAimEnabled = false
-local WhitelistFriendsEnabled = false
-local OnlyWhenEquippedEnabled = false
-local DirectionCheckEnabled = false
-local GhostCheckEnabled = false
-local ShowTargetSAEnabled = false
-local ResolverEnabled = false
-local DesyncEnabled = false
-local ShowArrowEnabled = false
-local AvoidProjectilesEnabled = false
 
 -- Variáveis de controle
 local ParryingCharacters = {}
 local GhostedCharacters = {}
 local LastParryTime = 0
-local ParryCooldown = 0.5
+local ParryCooldown = 0.3
 local cache = {}
 local chanceCache = {}
 local currentSilentAimTarget = nil
 local oldCf = CFrame.new()
 local oldCfCheck = false
-
--- Configurações de valores (sliders/inputs)
-local HitChance = 50
-local FOVSize = 500
-local SilentAimRange = 20
-local ParryChance = 50
-local MaxAngle = 60
-local MaxRange = 15
-local ClosestType = "Closest To Mouse"
-local SilentHitPart = "Torso"
 
 -- Backup das funções originais
 local OriginalPlaySound = SoundHandler.playSound
@@ -3069,6 +2974,28 @@ local OriginalSimulateCast = nil
 local OriginalSetStamina = nil
 local OriginalGetStamina = nil
 local OriginalSpendStamina = nil
+
+-- Criação da janela
+local Window = library.NewWindow({
+    title = "rip cw | by rwque", -- Mainwindow Text
+    size = UDim2.new(0, 580, 0.6, 6)
+})
+
+-- Criação das abas
+local Tabs = {
+    Player = Window:AddTab("  Player  "),
+    SilentAim = Window:AddTab("  Silent Aim  "),
+    AutoParry = Window:AddTab("  Auto Parry  "),
+    Settings = Window:AddTab("  Settings  ")
+}
+
+local SettingsTab = library:CreateSettingsTab(Window)
+
+-- Sistema para acessar valores dos controles
+local Options = {}
+function Options.GetValue(flag)
+    return library.flags[flag]
+end
 
 -- SISTEMA DE INFINITE STAMINA
 local function SetupInfiniteStamina()
@@ -3267,7 +3194,7 @@ function Framework:GetClosestToMouse(Distance)
 
     for i, v in pairs(Players:GetPlayers()) do
         if v == LocalPlayer then continue end
-        if WhitelistFriendsEnabled and LocalPlayer:IsFriendsWith(v.UserId) then continue end
+        if Options.GetValue("WhitelistFriends") and LocalPlayer:IsFriendsWith(v.UserId) then continue end
         if not (v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0) then continue end
         if Framework:InMenu(v) then continue end
 
@@ -3286,76 +3213,37 @@ function Framework:GetClosestToMouse(Distance)
     return TargetPlayer
 end
 
-function Framework:GetClosestCharacterToOrigin(originPosition, maxDistance)
-    if not PlayerCharacters then return nil, math.huge end
-    local closestCharacter = nil
-    local closestDistance = math.huge
-    for _, character in pairs(PlayerCharacters:GetChildren()) do
-        local player = Players:GetPlayerFromCharacter(character)
-        if player and player ~= LocalPlayer then
-            if not WhitelistFriendsEnabled or not LocalPlayer:IsFriendsWith(player.UserId) then
-                local hrp = character:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    local dist = (hrp.Position - originPosition).Magnitude
-                    if dist < maxDistance and dist < closestDistance then
-                        closestDistance = dist
-                        closestCharacter = character
-                    end
-                end
-            end
-        end
-    end
-    return closestCharacter, closestDistance
-end
-
-function Framework:GetClosestCharactersToOrigin(originPosition, maxDistance)
-    local characters = {}
-    if not PlayerCharacters then return characters end
-    for _, character in pairs(PlayerCharacters:GetChildren()) do
-        local player = Players:GetPlayerFromCharacter(character)
-        if player and player ~= LocalPlayer then
-            if not WhitelistFriendsEnabled or not LocalPlayer:IsFriendsWith(player.UserId) then
-                local hrp = character:FindFirstChild("HumanoidRootPart")
-                if hrp and (hrp.Position - originPosition).Magnitude < maxDistance then
-                    table.insert(characters, character)
-                end
-            end
-        end
-    end
-    return characters
-end
-
 -- SISTEMA DE AUTO PARRY
 local function CanParry(targetCharacter)
     if not AutoParryEnabled then return false end
     if not targetCharacter then return false end
     if targetCharacter == LocalPlayer.Character then return false end
     if table.find(ParryingCharacters, targetCharacter) then return false end
-    if GhostCheckEnabled and Framework:IsGhosted(targetCharacter) then return false end
-    if tick() - LastParryTime < ParryCooldown then return false end
+    if Framework:IsGhosted(targetCharacter) then return false end
+    if tick() - LastParryTime < Options.GetValue("ParryCooldown") then return false end
     
     local player = Players:GetPlayerFromCharacter(targetCharacter)
-    if WhitelistFriendsEnabled and player and LocalPlayer:IsFriendsWith(player.UserId) then
+    if Options.GetValue("WhitelistFriends") and player and LocalPlayer:IsFriendsWith(player.UserId) then
         return false
     end
     
-    if OnlyWhenEquippedEnabled then
+    if Options.GetValue("OnlyWhenEquipped") then
         local weapon, _ = Framework:GetWeapon()
         if not weapon then return false end
     end
     
     local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart")
     if not targetRoot then return false end
-    if not Framework:IsPartClose(targetRoot, MaxRange) then return false end
+    if not Framework:IsPartClose(targetRoot, Options.GetValue("MaxRange")) then return false end
     
     local localCharacter = Framework:GetLocalCharacter()
     if not localCharacter then return false end
     
-    if DirectionCheckEnabled and not Framework:CheckDirection(targetCharacter, localCharacter, MaxAngle) then
+    if Options.GetValue("DirectionCheck") and not Framework:CheckDirection(targetCharacter, localCharacter, Options.GetValue("MaxAngle")) then
         return false
     end
     
-    if not Framework:Chance(ParryChance) then return false end
+    if not Framework:Chance(Options.GetValue("Chance")) then return false end
     
     return true
 end
@@ -3444,7 +3332,7 @@ local SilentAimHighlight = Instance.new("Highlight", workspace.Terrain)
 SilentAimHighlight.FillColor = Color3.new(1, 1, 1)
 
 local function ShowInformation(target)
-    if ShowTargetSAEnabled and target then
+    if Options.GetValue("ShowTargetSA") and target then
         SilentAimHighlight.Adornee = target.Character
     else
         SilentAimHighlight.Adornee = nil
@@ -3455,36 +3343,25 @@ local function InitializeSilentAim()
     -- Hook do FastCast
     if ActiveCast then
         pcall(function()
-            -- Find simulate cast upvalue dynamically to support different FastCast builds
-            local foundIndex = nil
-            for i = 1, 20 do
-                local uv = getupvalue(ActiveCast.new, i)
-                if type(uv) == "function" then
-                    foundIndex = i
-                    break
-                end
-            end
-            if foundIndex then
-                OriginalSimulateCast = getupvalue(ActiveCast.new, foundIndex)
-            end
+            OriginalSimulateCast = getupvalue(ActiveCast.new, 6)
             
             local function newSimulateCast(...)
                 local args = {...}
                 local caster = args[1]
                 
                 if not caster then
-                    return OriginalSimulateCast and OriginalSimulateCast(...) or nil
+                    return OriginalSimulateCast(...)
                 end
 
                 local weapon, weaponClient, metadata = Framework:GetRanged()
                 
-                local Chance = Framework:Chance(HitChance)
+                local Chance = Framework:Chance(Options.GetValue("HitChance"))
                 if not Chance then
                     table.insert(chanceCache, caster)
                 end
 
                 -- Evitar projéteis
-                if AvoidProjectilesEnabled and caster and caster.UserData and caster.UserData.tool ~= weapon then
+                if Options.GetValue("AvoidProjectiles") and caster and caster.UserData and caster.UserData.tool ~= weapon then
                     local pos = caster:GetPosition()
                     local rootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
@@ -3505,32 +3382,25 @@ local function InitializeSilentAim()
                 end
 
                 -- Silent Aim principal
-                if SilentAimEnabled and weapon and metadata and not table.find(chanceCache, caster) and Chance then
+                if SilentAimEnabled and weapon and metadata and not table.find(chanceCache, caster) and Chance and caster and caster.UserData and caster.StateInfo and caster.UserData.tool == weapon then
                     local pos = caster:GetPosition()
                     local Player = nil
                     
-                    if ClosestType == "Closest To Mouse" then
-                        Player = Framework:GetClosestToMouse(FOVSize)
+                    if Options.GetValue("ClosestType") == "Closest To Mouse" then
+                        Player = Framework:GetClosestToMouse(Options.GetValue("FOVSize"))
                         if Player then
                             Player = Player.Character
-                        end
-                    elseif ClosestType == "Closest To Arrow" then
-                        Player = select(1, Framework:GetClosestCharacterToOrigin(pos, SilentAimRange))
-                    elseif ClosestType == "Only Redirect To Target" then
-                        local nearby = Framework:GetClosestCharactersToOrigin(pos, SilentAimRange)
-                        if table.find(nearby, currentSilentAimTarget) then
-                            Player = currentSilentAimTarget
                         end
                     end
                     
                     if Player then
-                        local hitPartName = SilentHitPart
+                        local hitPartName = Options.GetValue("SilentHitPart")
                         if hitPartName == "Random" then
                             hitPartName = R6BodyParts[math.random(1, #R6BodyParts)]
                         end
                         
                         local HitPart = Player:FindFirstChild(hitPartName)
-                        if HitPart and (HitPart.Position - pos).Magnitude <= SilentAimRange then
+                        if HitPart and (HitPart.Position - pos).Magnitude <= Options.GetValue("SilentAimRange") then
                             ShowInformation(Players:GetPlayerFromCharacter(Player))
                             
                             local direction = (HitPart.Position - pos).Unit
@@ -3542,8 +3412,8 @@ local function InitializeSilentAim()
                     end
                 end
 
-                if ShowArrowEnabled and caster and caster.SetStaticFastCastReference and not cache[caster] then
-                    cache[caster] = true
+                if Options.GetValue("ShowArrow") and caster and caster.SetStaticFastCastReference and not cache[caster] then
+                    table.insert(cache, caster)
                     caster.SetStaticFastCastReference({
                         DebugLogging = false,
                         VisualizeCasts = true
@@ -3553,22 +3423,20 @@ local function InitializeSilentAim()
                 return OriginalSimulateCast(...)
             end
 
-            if foundIndex then
-                setupvalue(ActiveCast.new, foundIndex, newSimulateCast)
-            end
+            setupvalue(ActiveCast.new, 6, newSimulateCast)
         end)
     end
 
     -- Hook backup do calculateFireDirection
     local function newCalculateFireDirection(fireCFrame, minSpread, maxSpread, speed)
-        local target = Framework:GetClosestToMouse(FOVSize)
+        local target = Framework:GetClosestToMouse(Options.GetValue("FOVSize"))
         local ranged, weaponClient, weaponMeta = Framework:GetRanged()
 
-        if SilentAimEnabled and target and ranged and weaponMeta and Framework:Chance(HitChance) and not Framework:InMenu(target) then
+        if SilentAimEnabled and target and ranged and weaponMeta and Framework:Chance(Options.GetValue("HitChance")) and not Framework:InMenu(target) then
             ShowInformation(target)
             currentSilentAimTarget = target.Character
             
-            local hitPartName = SilentHitPart
+            local hitPartName = Options.GetValue("SilentHitPart")
             if hitPartName == "Random" then
                 hitPartName = R6BodyParts[math.random(1, #R6BodyParts)]
             end
@@ -3583,7 +3451,7 @@ local function InitializeSilentAim()
                 end
                 
                 local velocity = Vector3.zero
-                if ResolverEnabled then
+                if Options.GetValue("Resolver") then
                     velocity = humanoid.MoveDirection * 16
                 else
                     velocity = hitPart.Velocity
@@ -3607,656 +3475,305 @@ local function InitializeSilentAim()
     RangedWeaponHandler.calculateFireDirection = newCalculateFireDirection
 end
 
--- =========================
--- UI CONTROLS - PLAYER TAB
--- =========================
+-- CONFIGURAÇÃO DA UI
+-- Player Tab
+local PlayerSection = Tabs.Player:AddSection("Player", 1)
 
-local InfiniteStaminaToggle = SectionPlayer:AddToggle({
+PlayerSection:AddToggle({
     text = "Infinite Stamina",
     state = false,
-    tooltip = "Gives unlimited stamina",
+    risky = false,
+    tooltip = "Grants infinite stamina",
     flag = "InfiniteStamina",
     callback = function(v)
         InfiniteStaminaEnabled = v
         if v then
             if not SetupInfiniteStamina() then
-                Library:SendNotification("Failed to enable Infinite Stamina!", 5)
+                library:SendNotification("Não foi possível ativar Infinite Stamina", 5)
             else
-                Library:SendNotification("Infinite Stamina enabled!", 3)
+                library:SendNotification("Infinite Stamina ativado com sucesso!", 3)
             end
         else
-            Library:SendNotification("Infinite Stamina disabled", 3)
+            library:SendNotification("Infinite Stamina desativado", 3)
         end
     end
 })
 
--- =========================
--- UI CONTROLS - SILENT AIM TAB
--- =========================
+-- Silent Aim Tab
+local SilentAimSection = Tabs.SilentAim:AddSection("Silent Aim", 1)
 
--- ENABLE TOGGLE FIRST - Silent Aim
-local EnableSilentAimToggle = SectionSilentAim:AddToggle({
+SilentAimSection:AddToggle({
     text = "Enable Silent Aim",
     state = false,
-    tooltip = "Enables silent aim functionality",
+    risky = true,
+    tooltip = "Enables silent aim",
     flag = "EnableSilentAim",
     callback = function(v)
         SilentAimEnabled = v
         if v then
-            Library:SendNotification("Silent Aim enabled!", 3)
+            library:SendNotification("Silent Aim ativado!", 3)
         else
-            Library:SendNotification("Silent Aim disabled", 3)
+            library:SendNotification("Silent Aim desativado", 3)
         end
     end
 })
 
--- Always-visible Silent Aim toggles and lists
-SectionSilentAim:AddToggle({
+SilentAimSection:AddToggle({
     text = "Resolver",
     state = false,
+    risky = false,
     tooltip = "Predicts player movement",
-    flag = "Resolver",
-    callback = function(v)
-        ResolverEnabled = v
-    end
+    flag = "Resolver"
 })
 
-SectionSilentAim:AddToggle({
-    text = "Show Target",
+SilentAimSection:AddToggle({
+    text = "Show Target SA",
     state = false,
-    tooltip = "Highlights the target",
-    flag = "ShowTarget",
-    callback = function(v)
-        ShowTargetSAEnabled = v
-    end
+    risky = false,
+    tooltip = "Shows silent aim target",
+    flag = "ShowTargetSA"
 })
 
-SectionSilentAim:AddToggle({
-    text = "Desync",
+SilentAimSection:AddToggle({
+    text = "Desyn",
     state = false,
-    tooltip = "Enables desync movement",
-    flag = "Desync",
-    callback = function(v)
-        DesyncEnabled = v
-    end
+    risky = true,
+    tooltip = "Desyncs your character",
+    flag = "Desyn"
 })
 
-SectionSilentAim:AddToggle({
+SilentAimSection:AddToggle({
     text = "Show Arrow",
     state = false,
-    tooltip = "Shows projectile trajectory",
-    flag = "ShowArrow",
-    callback = function(v)
-        ShowArrowEnabled = v
-    end
+    risky = false,
+    tooltip = "Shows projectile arrows",
+    flag = "ShowArrow"
 })
 
-SectionSilentAim:AddToggle({
-    text = "Avoid Projectiles",
-    state = false,
-    tooltip = "Automatically dodges incoming projectiles",
-    flag = "AvoidProjectiles",
-    callback = function(v)
-        AvoidProjectilesEnabled = v
-    end
-})
-
-SectionSilentAim:AddToggle({
+SilentAimSection:AddToggle({
     text = "Whitelist Friends",
     state = false,
-    tooltip = "Ignores friends in targeting",
-    flag = "WhitelistFriends",
-    callback = function(v)
-        WhitelistFriendsEnabled = v
-    end
+    risky = false,
+    tooltip = "Ignores friends",
+    flag = "WhitelistFriends"
 })
 
-SectionSilentAim:AddList({
-    text = "Closest Type",
+SilentAimSection:AddToggle({
+    text = "Avoid Projectiles",
+    state = false,
+    risky = false,
+    tooltip = "Avoids incoming projectiles",
+    flag = "AvoidProjectiles"
+})
+
+SilentAimSection:AddList({
+    enabled = true,
+    text = "Closest Type", 
     tooltip = "Target selection method",
     selected = "Closest To Mouse",
     multi = false,
+    open = false,
+    max = 4,
     values = {"Closest To Mouse", "Closest To Arrow", "Only Redirect To Target"},
+    risky = false,
+    flag = "ClosestType",
     callback = function(v)
-        ClosestType = v
+        -- Callback for closest type selection
     end
 })
 
-SectionSilentAim:AddList({
-    text = "Hit Part",
+SilentAimSection:AddList({
+    enabled = true,
+    text = "Silent Hit Part", 
     tooltip = "Body part to target",
     selected = "Torso",
     multi = false,
+    open = false,
+    max = 4,
     values = {"Head", "Torso", "Random"},
+    risky = false,
+    flag = "SilentHitPart",
     callback = function(v)
-        SilentHitPart = v
+        -- Callback for hit part selection
     end
 })
 
--- Silent Aim Sliders - LAST
-local FOVSlider = SectionSilentAim:AddSlider({
+SilentAimSection:AddSlider({
+    enabled = true,
     text = "FOV Size",
-    tooltip = "Field of view for targeting",
+    tooltip = "Field of view size",
     flag = "FOVSize",
-    suffix = " px",
+    suffix = "",
+    dragging = true,
+    focused = false,
     min = 0,
     max = 500,
-    increment = 10,
+    increment = 1,
+    risky = false,
     callback = function(v)
-        FOVSize = v
+        -- Callback for FOV size
     end
 })
-FOVSlider:SetValue(500)
 
-local HitChanceSlider = SectionSilentAim:AddSlider({
+SilentAimSection:AddSlider({
+    enabled = true,
     text = "Hit Chance",
-    tooltip = "Percentage chance to hit",
+    tooltip = "Hit chance percentage",
     flag = "HitChance",
     suffix = "%",
+    dragging = true,
+    focused = false,
     min = 10,
     max = 100,
     increment = 1,
+    risky = false,
     callback = function(v)
-        HitChance = v
+        -- Callback for hit chance
     end
 })
-HitChanceSlider:SetValue(50)
 
-local SilentRangeSlider = SectionSilentAim:AddSlider({
-    text = "Silent Range",
-    tooltip = "Maximum range for silent aim",
-    flag = "SilentRange",
-    suffix = " studs",
+SilentAimSection:AddSlider({
+    enabled = true,
+    text = "Silent Aim Range",
+    tooltip = "Silent aim range",
+    flag = "SilentAimRange",
+    suffix = "",
+    dragging = true,
+    focused = false,
     min = 10,
     max = 50,
     increment = 1,
+    risky = false,
     callback = function(v)
-        SilentAimRange = v
+        -- Callback for silent aim range
     end
 })
-SilentRangeSlider:SetValue(20)
 
+-- Auto Parry Tab
+local AutoParrySection = Tabs.AutoParry:AddSection("Auto Parry", 1)
 
--- =========================
--- UI CONTROLS - AUTO PARRY TAB
--- =========================
-
--- ENABLE TOGGLE FIRST - Auto Parry
-local EnableAutoParryToggle = SectionAutoParry:AddToggle({
+AutoParrySection:AddToggle({
     text = "Enable Auto Parry",
     state = false,
-    tooltip = "Automatically parries incoming attacks",
+    risky = true,
+    tooltip = "Enables auto parry",
     flag = "EnableAutoParry",
     callback = function(v)
         AutoParryEnabled = v
         if v then
-            Library:SendNotification("Auto Parry enabled!", 3)
+            library:SendNotification("Auto Parry ativado!", 3)
         else
-            Library:SendNotification("Auto Parry disabled", 3)
+            library:SendNotification("Auto Parry desativado", 3)
         end
     end
 })
 
--- Always-visible Auto Parry toggles
-SectionAutoParry:AddToggle({
+AutoParrySection:AddToggle({
     text = "Only When Equipped",
     state = false,
-    tooltip = "Only parry when weapon is equipped",
-    flag = "OnlyEquipped",
-    callback = function(v)
-        OnlyWhenEquippedEnabled = v
-    end
+    risky = false,
+    tooltip = "Only parry when weapon equipped",
+    flag = "OnlyWhenEquipped"
 })
 
-SectionAutoParry:AddToggle({
+AutoParrySection:AddToggle({
     text = "Direction Check",
     state = false,
-    tooltip = "Check enemy direction before parrying",
-    flag = "DirectionCheck",
-    callback = function(v)
-        DirectionCheckEnabled = v
-    end
+    risky = false,
+    tooltip = "Checks attack direction",
+    flag = "DirectionCheck"
 })
 
-SectionAutoParry:AddToggle({
+AutoParrySection:AddToggle({
+    text = "Facing Check",
+    state = false,
+    risky = false,
+    tooltip = "Checks if facing attacker",
+    flag = "FacingCheck"
+})
+
+AutoParrySection:AddToggle({
     text = "Ghost Check",
     state = false,
-    tooltip = "Ignore ghosted/parried enemies",
-    flag = "GhostCheck",
-    callback = function(v)
-        GhostCheckEnabled = v
-    end
+    risky = false,
+    tooltip = "Checks for ghosted players",
+    flag = "GhostCheck"
 })
 
--- Auto Parry Sliders - LAST
-local ParryChanceSlider = SectionAutoParry:AddSlider({
-    text = "Parry Chance",
+AutoParrySection:AddSlider({
+    enabled = true,
+    text = "Chance",
     tooltip = "Parry chance percentage",
-    flag = "ParryChance",
+    flag = "Chance",
     suffix = "%",
+    dragging = true,
+    focused = false,
     min = 10,
     max = 100,
     increment = 1,
+    risky = false,
     callback = function(v)
-        ParryChance = v
+        -- Callback for chance
     end
 })
-ParryChanceSlider:SetValue(50)
 
-local MaxAngleSlider = SectionAutoParry:AddSlider({
+AutoParrySection:AddSlider({
+    enabled = true,
     text = "Max Angle",
-    tooltip = "Maximum angle for direction check",
+    tooltip = "Maximum angle for parry",
     flag = "MaxAngle",
     suffix = "°",
+    dragging = true,
+    focused = false,
     min = 10,
     max = 100,
     increment = 1,
+    risky = false,
     callback = function(v)
-        MaxAngle = v
+        -- Callback for max angle
     end
 })
-MaxAngleSlider:SetValue(60)
 
-local MaxRangeSlider = SectionAutoParry:AddSlider({
+AutoParrySection:AddSlider({
+    enabled = true,
     text = "Max Range",
-    tooltip = "Maximum range for parrying",
+    tooltip = "Maximum range for parry",
     flag = "MaxRange",
-    suffix = " studs",
+    suffix = "",
+    dragging = true,
+    focused = false,
     min = 10,
     max = 20,
     increment = 1,
+    risky = false,
     callback = function(v)
-        MaxRange = v
+        -- Callback for max range
     end
 })
-MaxRangeSlider:SetValue(15)
 
-local ParryCooldownSlider = SectionAutoParry:AddSlider({
+AutoParrySection:AddSlider({
+    enabled = true,
     text = "Parry Cooldown",
     tooltip = "Cooldown between parries",
     flag = "ParryCooldown",
-    suffix = " s",
+    suffix = "s",
+    dragging = true,
+    focused = false,
     min = 0,
     max = 2,
     increment = 0.1,
+    risky = false,
     callback = function(v)
-        ParryCooldown = v
+        -- Callback for parry cooldown
     end
 })
-ParryCooldownSlider:SetValue(0.5)
-    if not slider then return end
-    
-    print("[Debug] ForceDestroy starting for slider:", tostring(slider))
-    
-    -- Tokyo UI Library specific destruction
-    pcall(function()
-        -- Method 1: Try Tokyo-specific removal
-        if slider.Object and slider.Object.Parent then
-            local parent = slider.Object.Parent
-            slider.Object:Destroy()
-            print("[Debug] Destroyed slider.Object from parent:", parent.Name)
-        end
-        
-        -- Method 2: Find and destroy the actual GUI frame
-        if slider.Object then
-            local obj = slider.Object
-            -- Look for the slider frame in the object hierarchy
-            for _, child in pairs(obj:GetDescendants()) do
-                if child:IsA("Frame") or child:IsA("TextLabel") or child:IsA("TextBox") then
-                    child:Destroy()
-                    print("[Debug] Destroyed child:", child.Name, child.ClassName)
-                end
-            end
-        end
-        
-        -- Method 3: Access the section and try to remove the slider from its elements
-        if SectionAutoParry and SectionAutoParry.Elements then
-            for i, element in ipairs(SectionAutoParry.Elements) do
-                if element == slider then
-                    table.remove(SectionAutoParry.Elements, i)
-                    print("[Debug] Removed slider from SectionAutoParry.Elements at index:", i)
-                    break
-                end
-            end
-        end
-        
-        if SectionSilentAim and SectionSilentAim.Elements then
-            for i, element in ipairs(SectionSilentAim.Elements) do
-                if element == slider then
-                    table.remove(SectionSilentAim.Elements, i)
-                    print("[Debug] Removed slider from SectionSilentAim.Elements at index:", i)
-                    break
-                end
-            end
-        end
-        
-        -- Method 4: Try to access MainTab elements
-        if MainTab and MainTab.Elements then
-            for i, element in ipairs(MainTab.Elements) do
-                if element == slider then
-                    table.remove(MainTab.Elements, i)
-                    print("[Debug] Removed slider from MainTab.Elements at index:", i)
-                    break
-                end
-            end
-        end
-        
-        -- Method 5: Direct GUI destruction by finding slider frames
-        if WindowMain and WindowMain.Window then
-            for _, descendant in pairs(WindowMain.Window:GetDescendants()) do
-                if descendant:IsA("Frame") and (descendant.Name:find("Slider") or descendant.Name:find("slider")) then
-                    -- Check if this frame belongs to our slider
-                    local shouldDestroy = false
-                    for _, child in pairs(descendant:GetChildren()) do
-                        if child:IsA("TextLabel") then
-                            local text = child.Text
-                            if text == "Parry Chance" or text == "Max Angle" or text == "Max Range" or text == "Parry Cooldown" or
-                               text == "FOV Size" or text == "Hit Chance" or text == "Silent Range" then
-                                shouldDestroy = true
-                                break
-                            end
-                        end
-                    end
-                    
-                    if shouldDestroy then
-                        descendant:Destroy()
-                        print("[Debug] Destroyed slider frame:", descendant.Name)
-                    end
-                end
-            end
-        end
-        
-        print("[Debug] ForceDestroy completed for slider")
-    end)
-local function RebuildSectionWithoutSliders(isAutoParry)
-    print("[Debug] Rebuilding section without sliders:", isAutoParry and "AutoParry" or "SilentAim")
-    
-    pcall(function()
-        local section = isAutoParry and SectionAutoParry or SectionSilentAim
-        
-        if section and section.Container then
-            -- Find and destroy slider-related frames
-            for _, child in pairs(section.Container:GetDescendants()) do
-                if child:IsA("Frame") then
-                    -- Check if this frame contains slider text
-                    for _, subchild in pairs(child:GetChildren()) do
-                        if subchild:IsA("TextLabel") then
-                            local text = subchild.Text
-                            local isSliderText = false
-                            
-                            if isAutoParry then
-                                isSliderText = (text == "Parry Chance" or text == "Max Angle" or 
-                                              text == "Max Range" or text == "Parry Cooldown")
-                            else
-                                isSliderText = (text == "FOV Size" or text == "Hit Chance" or 
-                                              text == "Silent Range")
-                            end
-                            
-                            if isSliderText then
-                                child:Destroy()
-                                print("[Debug] Destroyed slider frame for:", text)
-                                break
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end)
-end
-    if _autoParrySliders then 
-        print("[Debug] Auto Parry sliders already exist, skipping creation")
-        return 
-    end
-    
-    print("[Debug] Creating Auto Parry sliders...")
-    _autoParrySliders = {}
-
-    local ParryChanceSlider = SectionAutoParry:AddSlider({
-        text = "Parry Chance",
-        tooltip = "Parry chance percentage",
-        flag = "ParryChance",
-        suffix = "%",
-        min = 10,
-        max = 100,
-        increment = 1,
-        callback = function(v)
-            ParryChance = v
-        end
-    })
-    ParryChanceSlider:SetValue(50)
-    table.insert(_autoParrySliders, ParryChanceSlider)
-
-    local MaxAngleSlider = SectionAutoParry:AddSlider({
-        text = "Max Angle",
-        tooltip = "Maximum angle for direction check",
-        flag = "MaxAngle",
-        suffix = "°",
-        min = 10,
-        max = 100,
-        increment = 1,
-        callback = function(v)
-            MaxAngle = v
-        end
-    })
-    MaxAngleSlider:SetValue(60)
-    table.insert(_autoParrySliders, MaxAngleSlider)
-
-    local MaxRangeSlider = SectionAutoParry:AddSlider({
-        text = "Max Range",
-        tooltip = "Maximum range for parrying",
-        flag = "MaxRange",
-        suffix = " studs",
-        min = 10,
-        max = 20,
-        increment = 1,
-        callback = function(v)
-            MaxRange = v
-        end
-    })
-    MaxRangeSlider:SetValue(15)
-    table.insert(_autoParrySliders, MaxRangeSlider)
-
-    local ParryCooldownSlider = SectionAutoParry:AddSlider({
-        text = "Parry Cooldown",
-        tooltip = "Cooldown between parries",
-        flag = "ParryCooldown",
-        suffix = " s",
-        min = 0,
-        max = 2,
-        increment = 0.1,
-        callback = function(v)
-            ParryCooldown = v
-        end
-    })
-    ParryCooldownSlider:SetValue(0.5)
-
-
--- ENABLE TOGGLE FIRST - Silent Aim
-local EnableSilentAimToggle = SectionSilentAim:AddToggle({
-    text = "Enable Silent Aim",
-    state = false,
-    tooltip = "Enables silent aim functionality",
-    flag = "EnableSilentAim",
-    callback = function(v)
-        SilentAimEnabled = v
-        if v then
-            Library:SendNotification("Silent Aim enabled!", 3)
-            CreateSilentAimSliders()
-        else
-            Library:SendNotification("Silent Aim disabled", 3)
-            DestroySilentAimSliders()
-        end
-    end
-})
-
--- Always-visible Silent Aim toggles and lists
-SectionSilentAim:AddToggle({
-    text = "Resolver",
-    state = false,
-    tooltip = "Predicts player movement",
-    flag = "Resolver",
-    callback = function(v)
-        ResolverEnabled = v
-    end
-})
-
-SectionSilentAim:AddToggle({
-    text = "Show Target",
-    state = false,
-    tooltip = "Highlights the target",
-    flag = "ShowTarget",
-    callback = function(v)
-        ShowTargetSAEnabled = v
-    end
-})
-
-SectionSilentAim:AddToggle({
-    text = "Desync",
-    state = false,
-    tooltip = "Enables desync movement",
-    flag = "Desync",
-    callback = function(v)
-        DesyncEnabled = v
-    end
-})
-
-SectionSilentAim:AddToggle({
-    text = "Show Arrow",
-    state = false,
-    tooltip = "Shows projectile trajectory",
-    flag = "ShowArrow",
-    callback = function(v)
-        ShowArrowEnabled = v
-    end
-})
-
-SectionSilentAim:AddToggle({
-    text = "Avoid Projectiles",
-    state = false,
-    tooltip = "Automatically dodges incoming projectiles",
-    flag = "AvoidProjectiles",
-    callback = function(v)
-        AvoidProjectilesEnabled = v
-    end
-})
-
-SectionSilentAim:AddToggle({
-    text = "Whitelist Friends",
-    state = false,
-    tooltip = "Ignores friends in targeting",
-    flag = "WhitelistFriends",
-    callback = function(v)
-        WhitelistFriendsEnabled = v
-    end
-})
-
-SectionSilentAim:AddList({
-    text = "Closest Type",
-    tooltip = "Target selection method",
-    selected = "Closest To Mouse",
-    multi = false,
-    values = {"Closest To Mouse", "Closest To Arrow", "Only Redirect To Target"},
-    callback = function(v)
-        ClosestType = v
-    end
-})
-
-SectionSilentAim:AddList({
-    text = "Hit Part",
-    tooltip = "Body part to target",
-    selected = "Torso",
-    multi = false,
-    values = {"Head", "Torso", "Random"},
-    callback = function(v)
-        SilentHitPart = v
-    end
-})
-
--- =========================
--- UI CONTROLS - AUTO PARRY TAB
--- =========================
-
--- ENABLE TOGGLE FIRST - Auto Parry
-local EnableAutoParryToggle = SectionAutoParry:AddToggle({
-    text = "Enable Auto Parry",
-    state = false,
-    tooltip = "Automatically parries incoming attacks",
-    flag = "EnableAutoParry",
-    callback = function(v)
-        AutoParryEnabled = v
-        if v then
-            Library:SendNotification("Auto Parry enabled!", 3)
-            CreateAutoParrySliders()
-        else
-            Library:SendNotification("Auto Parry disabled", 3)
-            DestroyAutoParrySliders()
-        end
-    end
-})
-
--- Always-visible Auto Parry toggles
-SectionAutoParry:AddToggle({
-    text = "Only When Equipped",
-    state = false,
-    tooltip = "Only parry when weapon is equipped",
-    flag = "OnlyEquipped",
-    callback = function(v)
-        OnlyWhenEquippedEnabled = v
-    end
-})
-
-SectionAutoParry:AddToggle({
-    text = "Direction Check",
-    state = false,
-    tooltip = "Check enemy direction before parrying",
-    flag = "DirectionCheck",
-    callback = function(v)
-        DirectionCheckEnabled = v
-    end
-})
-
--- Sliders will be created dynamically when feature is enabled
-
--- Aguardar a criação completa da UI antes de configurar elementos
-task.spawn(function()
-    task.wait(0.2) -- Aguardar mais tempo para UI estabilizar
-    
-    -- Forçar refresh completo da UI após tudo estar criado
-    task.wait(0.1)
-    
-    -- Métodos de refresh da UI
-    pcall(function()
-        if WindowMain and WindowMain.Refresh then
-            WindowMain:Refresh()
-        end
-    end)
-    
-    pcall(function()
-        if Library and Library.Refresh then
-            Library:Refresh()
-        end
-    end)
-    
-    -- Simular mudança de aba para forçar layout refresh
-    pcall(function()
-        if SettingsTab and WindowMain then
-            task.wait(0.1)
-            if SettingsTab.SetActive then
-                SettingsTab:SetActive()
-                task.wait(0.05)
-                MainTab:SetActive()
-            end
-        end
-    end)
-end)
 
 -- Sistema de Desync
 task.spawn(function()
     while true do
         RunService.Heartbeat:Wait()
 
-        if DesyncEnabled then
+        if Options.GetValue("Desyn") then
             local Character = LocalPlayer.Character
             if not Character then continue end
             local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
@@ -4285,9 +3802,13 @@ pcall(function()
     end)
 end)
 
+-- Configuração do SaveManager e InterfaceManager (removido - usando Tokyo Lib)
+
 -- Instala os hooks
 SoundHandler.playSound = SoundHook
 InitializeSilentAim()
+
+-- Seleciona a primeira aba (removido - Tokyo Lib não precisa)
 
 -- Função de limpeza global
 _G.ScriptCleanup = function()
@@ -4333,8 +3854,8 @@ _G.ScriptCleanup = function()
 end
 
 -- Notificação de inicialização
-local Time = (string.format("%." .. tostring(Decimals) .. "f", os.clock() - Clock))
-Library:SendNotification(("rip cw loaded in " .. tostring(Time) .. "s"), 6)
+local Time = (string.format("%."..tostring(Decimals).."f", os.clock() - Clock))
+library:SendNotification("rip cw carregado com sucesso! ("..tostring(Time).."s)", 8)
 
 print("[Script] rip cw carregado com sucesso!")
 print("Funcionalidades disponíveis:")
@@ -4342,7 +3863,6 @@ print("- Infinite Stamina:", DefaultStaminaHandlerClient and "✓" or "✗")
 print("- Auto Parry: ✓")
 print("- Silent Aim:", ActiveCast and "✓ (FastCast)" or "✓ (Backup)")
 print("Use _G.ScriptCleanup() para remover o script completamente.")
-
         end
     },
     [1111111111111] = {
