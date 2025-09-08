@@ -163,31 +163,6 @@ local ShowTween = TweenService:Create(
 )
 ShowTween:Play()
 
--- Icon Tween Animation
-local OriginalIconPosition = Icon.Position
-local Amplitude = 2
-local Speed = 0.8
-
-local function CreateIconTween(Target, Direction)
-	local TweenInfoObj = TweenInfo.new(
-		1 / Speed / 2,
-		Enum.EasingStyle.Sine,
-		Enum.EasingDirection.InOut
-	)
-	local Goal = {Position = OriginalIconPosition + UDim2.new(0, 0, 0, Amplitude * Direction)}
-	return TweenService:Create(Target, TweenInfoObj, Goal)
-end
-
-spawn(function()
-	local Direction = 1
-	while true do
-		local TweenIcon = CreateIconTween(Icon, Direction)
-		TweenIcon:Play()
-		TweenIcon.Completed:Wait()
-		Direction = Direction * -1
-	end
-end)
-
 -- Function to update GUI
 local function updateGui(gameName, status)
 	TitleLabel.Text = "wisper"
