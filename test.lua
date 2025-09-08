@@ -2905,7 +2905,7 @@ local Decimals = 4
 local Clock = os.clock()
 local ValueText = "Value Is Now :"
 
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua"))({
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/isKuyo/UI/refs/heads/main/Source.lua"))({
     cheatname = "rip cw", -- watermark text
     gamename = "Combat Warriors", -- watermark text
 })
@@ -2981,13 +2981,8 @@ local Window = library.NewWindow({
     size = UDim2.new(0, 580, 0.6, 6)
 })
 
--- Criação das abas
-local Tabs = {
-    Player = Window:AddTab("  Player  "),
-    SilentAim = Window:AddTab("  Silent Aim  "),
-    AutoParry = Window:AddTab("  Auto Parry  "),
-    Settings = Window:AddTab("  Settings  ")
-}
+-- Criação da aba principal
+local MainTab = Window:AddTab("  Main  ")
 
 local SettingsTab = library:CreateSettingsTab(Window)
 
@@ -3476,13 +3471,12 @@ local function InitializeSilentAim()
 end
 
 -- CONFIGURAÇÃO DA UI
--- Player Tab
-local PlayerSection = Tabs.Player:AddSection("Player", 1)
+-- Player Group
+local PlayerGroup = MainTab:AddSection("Player", 1)
 
-PlayerSection:AddToggle({
+PlayerGroup:AddToggle({
     text = "Infinite Stamina",
     state = false,
-    risky = false,
     tooltip = "Grants infinite stamina",
     flag = "InfiniteStamina",
     callback = function(v)
@@ -3499,13 +3493,12 @@ PlayerSection:AddToggle({
     end
 })
 
--- Silent Aim Tab
-local SilentAimSection = Tabs.SilentAim:AddSection("Silent Aim", 1)
+-- Silent Aim Group
+local SilentAimGroup = MainTab:AddSection("Silent Aim", 2)
 
-SilentAimSection:AddToggle({
+SilentAimGroup:AddToggle({
     text = "Enable Silent Aim",
     state = false,
-    risky = true,
     tooltip = "Enables silent aim",
     flag = "EnableSilentAim",
     callback = function(v)
@@ -3518,55 +3511,49 @@ SilentAimSection:AddToggle({
     end
 })
 
-SilentAimSection:AddToggle({
+SilentAimGroup:AddToggle({
     text = "Resolver",
     state = false,
-    risky = false,
     tooltip = "Predicts player movement",
     flag = "Resolver"
 })
 
-SilentAimSection:AddToggle({
+SilentAimGroup:AddToggle({
     text = "Show Target SA",
     state = false,
-    risky = false,
     tooltip = "Shows silent aim target",
     flag = "ShowTargetSA"
 })
 
-SilentAimSection:AddToggle({
+SilentAimGroup:AddToggle({
     text = "Desyn",
     state = false,
-    risky = true,
     tooltip = "Desyncs your character",
     flag = "Desyn"
 })
 
-SilentAimSection:AddToggle({
+SilentAimGroup:AddToggle({
     text = "Show Arrow",
     state = false,
-    risky = false,
     tooltip = "Shows projectile arrows",
     flag = "ShowArrow"
 })
 
-SilentAimSection:AddToggle({
+SilentAimGroup:AddToggle({
     text = "Whitelist Friends",
     state = false,
-    risky = false,
     tooltip = "Ignores friends",
     flag = "WhitelistFriends"
 })
 
-SilentAimSection:AddToggle({
+SilentAimGroup:AddToggle({
     text = "Avoid Projectiles",
     state = false,
-    risky = false,
     tooltip = "Avoids incoming projectiles",
     flag = "AvoidProjectiles"
 })
 
-SilentAimSection:AddList({
+SilentAimGroup:AddList({
     enabled = true,
     text = "Closest Type", 
     tooltip = "Target selection method",
@@ -3575,14 +3562,13 @@ SilentAimSection:AddList({
     open = false,
     max = 4,
     values = {"Closest To Mouse", "Closest To Arrow", "Only Redirect To Target"},
-    risky = false,
     flag = "ClosestType",
     callback = function(v)
         -- Callback for closest type selection
     end
 })
 
-SilentAimSection:AddList({
+SilentAimGroup:AddList({
     enabled = true,
     text = "Silent Hit Part", 
     tooltip = "Body part to target",
@@ -3591,14 +3577,13 @@ SilentAimSection:AddList({
     open = false,
     max = 4,
     values = {"Head", "Torso", "Random"},
-    risky = false,
     flag = "SilentHitPart",
     callback = function(v)
         -- Callback for hit part selection
     end
 })
 
-SilentAimSection:AddSlider({
+SilentAimGroup:AddSlider({
     enabled = true,
     text = "FOV Size",
     tooltip = "Field of view size",
@@ -3609,13 +3594,12 @@ SilentAimSection:AddSlider({
     min = 0,
     max = 500,
     increment = 1,
-    risky = false,
     callback = function(v)
         -- Callback for FOV size
     end
 })
 
-SilentAimSection:AddSlider({
+SilentAimGroup:AddSlider({
     enabled = true,
     text = "Hit Chance",
     tooltip = "Hit chance percentage",
@@ -3626,13 +3610,12 @@ SilentAimSection:AddSlider({
     min = 10,
     max = 100,
     increment = 1,
-    risky = false,
     callback = function(v)
         -- Callback for hit chance
     end
 })
 
-SilentAimSection:AddSlider({
+SilentAimGroup:AddSlider({
     enabled = true,
     text = "Silent Aim Range",
     tooltip = "Silent aim range",
@@ -3643,19 +3626,17 @@ SilentAimSection:AddSlider({
     min = 10,
     max = 50,
     increment = 1,
-    risky = false,
     callback = function(v)
         -- Callback for silent aim range
     end
 })
 
--- Auto Parry Tab
-local AutoParrySection = Tabs.AutoParry:AddSection("Auto Parry", 1)
+-- Auto Parry Group
+local AutoParryGroup = MainTab:AddSection("Auto Parry", 3)
 
-AutoParrySection:AddToggle({
+AutoParryGroup:AddToggle({
     text = "Enable Auto Parry",
     state = false,
-    risky = true,
     tooltip = "Enables auto parry",
     flag = "EnableAutoParry",
     callback = function(v)
@@ -3668,39 +3649,35 @@ AutoParrySection:AddToggle({
     end
 })
 
-AutoParrySection:AddToggle({
+AutoParryGroup:AddToggle({
     text = "Only When Equipped",
     state = false,
-    risky = false,
     tooltip = "Only parry when weapon equipped",
     flag = "OnlyWhenEquipped"
 })
 
-AutoParrySection:AddToggle({
+AutoParryGroup:AddToggle({
     text = "Direction Check",
     state = false,
-    risky = false,
     tooltip = "Checks attack direction",
     flag = "DirectionCheck"
 })
 
-AutoParrySection:AddToggle({
+AutoParryGroup:AddToggle({
     text = "Facing Check",
     state = false,
-    risky = false,
     tooltip = "Checks if facing attacker",
     flag = "FacingCheck"
 })
 
-AutoParrySection:AddToggle({
+AutoParryGroup:AddToggle({
     text = "Ghost Check",
     state = false,
-    risky = false,
     tooltip = "Checks for ghosted players",
     flag = "GhostCheck"
 })
 
-AutoParrySection:AddSlider({
+AutoParryGroup:AddSlider({
     enabled = true,
     text = "Chance",
     tooltip = "Parry chance percentage",
@@ -3711,13 +3688,12 @@ AutoParrySection:AddSlider({
     min = 10,
     max = 100,
     increment = 1,
-    risky = false,
     callback = function(v)
         -- Callback for chance
     end
 })
 
-AutoParrySection:AddSlider({
+AutoParryGroup:AddSlider({
     enabled = true,
     text = "Max Angle",
     tooltip = "Maximum angle for parry",
@@ -3728,13 +3704,12 @@ AutoParrySection:AddSlider({
     min = 10,
     max = 100,
     increment = 1,
-    risky = false,
     callback = function(v)
         -- Callback for max angle
     end
 })
 
-AutoParrySection:AddSlider({
+AutoParryGroup:AddSlider({
     enabled = true,
     text = "Max Range",
     tooltip = "Maximum range for parry",
@@ -3745,13 +3720,12 @@ AutoParrySection:AddSlider({
     min = 10,
     max = 20,
     increment = 1,
-    risky = false,
     callback = function(v)
         -- Callback for max range
     end
 })
 
-AutoParrySection:AddSlider({
+AutoParryGroup:AddSlider({
     enabled = true,
     text = "Parry Cooldown",
     tooltip = "Cooldown between parries",
@@ -3762,7 +3736,6 @@ AutoParrySection:AddSlider({
     min = 0,
     max = 2,
     increment = 0.1,
-    risky = false,
     callback = function(v)
         -- Callback for parry cooldown
     end
